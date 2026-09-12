@@ -7,7 +7,7 @@ fn main() {
     if !cfg!(target_os = "android") && target_os == "android" {
         // This branch is taken if Host OS isnt android, but we target android
         // Uses the Android NDK, Latest LTS
-        let android_ndk_home = env::var("ANDROID_NDK_HOME")
+        let mut android_ndk_home = env::var("ANDROID_NDK_HOME")
             .unwrap_or("".into())
             .replace('\\', "/");
 
@@ -23,7 +23,7 @@ fn main() {
         if android_ndk_home == "" {
             panic!("ANDROID_NDK_HOME env-variable is undefined!");
         } else if android_ndk_home.ends_with("/") {
-            panic!("ANDROID_NDK_HOME is invalid! Remove any \\ or / from the end!");
+            android_ndk_home.pop();
         }
 
         let sysroot = format!("{android_ndk_home}/toolchains/llvm/prebuilt/{host_tag}/sysroot");
