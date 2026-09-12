@@ -1,0 +1,28 @@
+use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, InstanceCreateFlags, InstanceCreateInfo}};
+
+pub fn init(
+    enable_debug_validation_layer: bool,
+    entry: &Entry,
+    app_info: &ApplicationInfo
+) -> VkResult<Instance> {
+    let instance_info;
+    let debug_layer_name = c"VK_LAYER_KHRONOS_validation";
+    
+    if enable_debug_validation_layer {
+        instance_info = InstanceCreateInfo {
+            flags: InstanceCreateFlags::ENUMERATE_PORTABILITY_KHR,
+            p_application_info: app_info,
+            enabled_layer_count: 1,
+            pp_enabled_layer_names: &debug_layer_name.as_ptr() as *const *const u8,
+            ..Default::default()
+        };
+    } else {
+        instance_info = InstanceCreateInfo {
+            flags: InstanceCreateFlags::ENUMERATE_PORTABILITY_KHR,
+            p_application_info: app_info,
+            ..Default::default()
+        } 
+    }
+    
+    unsafe { entry.create_instance(&instance_info, None) }
+}
