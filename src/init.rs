@@ -1,4 +1,4 @@
-use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, InstanceCreateFlags, InstanceCreateInfo}};
+use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, InstanceCreateInfo}};
 
 pub fn init(
     enable_debug_validation_layer: bool,
@@ -10,7 +10,6 @@ pub fn init(
     
     if enable_debug_validation_layer {
         instance_info = InstanceCreateInfo {
-            flags: InstanceCreateFlags::ENUMERATE_PORTABILITY_KHR,
             p_application_info: app_info,
             enabled_layer_count: 1,
             pp_enabled_layer_names: &debug_layer_name.as_ptr() as *const *const u8,
@@ -18,7 +17,6 @@ pub fn init(
         };
     } else {
         instance_info = InstanceCreateInfo {
-            flags: InstanceCreateFlags::ENUMERATE_PORTABILITY_KHR,
             p_application_info: app_info,
             ..Default::default()
         } 

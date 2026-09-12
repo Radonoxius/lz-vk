@@ -1,5 +1,6 @@
 use ash::vk::{ApplicationInfo, make_api_version};
 
+#[test]
 fn main() {
     let entry = ash::Entry::linked();
     let app_info = ApplicationInfo {
