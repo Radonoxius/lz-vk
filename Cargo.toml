@@ -13,3 +13,5 @@ description = "A generic memory decompressor for GPUs using Vulkan"
 rust-version = "1.96"
 
 [dependencies]
+libc = "0.2.189"
+ash = "0.38.0"

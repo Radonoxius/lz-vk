@@ -1,8 +1,6 @@
 [alias]
 b  = "build"
 br = "build --release"
-r  = "run"
-rr = "run --release"
 c  = "check"
 t  = "test"
 
