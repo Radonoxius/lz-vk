@@ -1,3 +1,5 @@
+use std::ffi::c_char;
+
 use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, InstanceCreateInfo}};
 
 pub fn init(
@@ -12,7 +14,7 @@ pub fn init(
         instance_info = InstanceCreateInfo {
             p_application_info: app_info,
             enabled_layer_count: 1,
-            pp_enabled_layer_names: &debug_layer_name.as_ptr() as *const *const u8,
+            pp_enabled_layer_names: &debug_layer_name.as_ptr() as *const *const c_char,
             ..Default::default()
         };
     } else {
