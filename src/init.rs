@@ -21,7 +21,7 @@ pub fn init(
         instance_info = InstanceCreateInfo {
             p_application_info: app_info,
             ..Default::default()
-        } 
+        }
     }
     
     unsafe { entry.create_instance(&instance_info, None) }
