@@ -1,7 +1,7 @@
 use ash::vk::{ApplicationInfo, make_api_version};
 
 #[test]
-fn init() {
+fn init_test() {
     let entry = ash::Entry::linked();
     let app_info = ApplicationInfo {
         api_version: make_api_version(0, 1, 1, 0),
@@ -10,6 +10,6 @@ fn init() {
 
     let instance = lz_vk::init::init(true, &entry, &app_info);
     if let Err(_) = instance {
-        panic!("Failed to init lz-vk!");
+        instance.unwrap();
     }
 }
