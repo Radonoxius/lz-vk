@@ -10,7 +10,7 @@ license = "MIT"
 repository = "https://github.com/Radonoxius/lz-vk"
 keywords = ["vulkan", "gpu", "compression", "decompression"]
 description = "A generic memory decompressor for GPUs using Vulkan"
-rust-version = "1.96"
+rust-version = "1.85"
 
 [dependencies]
 libc = "0.2.189"

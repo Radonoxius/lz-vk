@@ -12,24 +12,23 @@ Use the following commands to get all the necessary tools:
 
 Ubuntu/Debian:
 ```bash
-sudo apt install -y clang cmake pkg-config \
+sudo apt install -y git clang cmake pkg-config \
     libvulkan-dev vulkan-tools vulkan-validationlayers-dev \
     spirv-tools glslang-tools
 ```
 
 Fedora:
 ```bash
-sudo dnf install -y clang clang-tools-extra cmake pkgconf-pkg-config \
+sudo dnf install -y git clang clang-tools-extra cmake pkgconf-pkg-config \
     vulkan-loader-devel vulkan-headers vulkan-tools vulkan-validation-layers-devel \
     spirv-tools glslang
 ```
 
 Termux:
 ```bash
-pkg install -y rust clang cmake pkg-config \
-    vulkan-loader-generic vulkan-headers vulkan-tools \
+pkg install -y rust clang git gh cmake pkg-config \
+    vulkan-loader-android vulkan-headers vulkan-tools \
     spirv-tools glslang
 ```
 
 **NOTE: The build tooling isnt tested on Windows & Mac yet. However it should work out of the box**
-

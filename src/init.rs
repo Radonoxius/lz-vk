@@ -1,27 +1,68 @@
-use std::ffi::c_char;
+use std::sync::atomic::Ordering::Relaxed;
 
-use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, InstanceCreateInfo}};
+use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, ExtensionProperties, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME}};
+
+use crate::{DEBUG_LOGS, LAYER_KHRONOS_VALIDATION_NAME};
+
+/// Finds if `VK_KHR_portability_enumeration` Instance extension is supported.
+/// Usrful for supporting Non-Conformant drivers & MoltenVK
+pub fn is_portability_enumeration_supported(
+    instance_extensions: &Vec<ExtensionProperties>
+) -> bool {
+    for instance_extension in instance_extensions {
+        let instance_extension_name = instance_extension
+            .extension_name_as_c_str();
+
+        if let Err(_) = instance_extension_name {
+            if DEBUG_LOGS.load(Relaxed) {
+                println!("[is_portability_enumeration_supported]: false");
+            }
+            return false;
+        } else {
+            if unsafe { instance_extension_name.unwrap_unchecked() } == KHR_PORTABILITY_ENUMERATION_NAME {
+                if DEBUG_LOGS.load(Relaxed) {
+                    println!("[is_portability_enumeration_supported]: true");
+                }
+                return true;
+            }
+        }
+    }
+
+    if DEBUG_LOGS.load(Relaxed) {
+        println!("[is_portability_enumeration_supported]: false");
+    }
+    false
+}
 
 pub fn init(
-    enable_debug_validation_layer: bool,
     entry: &Entry,
-    app_info: &ApplicationInfo
+    app_info: &ApplicationInfo,
+    enable_debug_validation: bool,
+    enbale_portability_enumeration: bool
 ) -> VkResult<Instance> {
     let instance_info;
-    let khr_validation_layer_name = c"VK_LAYER_KHRONOS_validation";
+
+    let enabled_layers = [LAYER_KHRONOS_VALIDATION_NAME.as_ptr()];
+    let enabled_instance_extensions = [KHR_PORTABILITY_ENUMERATION_NAME.as_ptr()];
     
-    if enable_debug_validation_layer {
-        instance_info = InstanceCreateInfo {
-            p_application_info: app_info,
-            enabled_layer_count: 1,
-            pp_enabled_layer_names: &khr_validation_layer_name.as_ptr() as *const *const c_char,
-            ..Default::default()
-        };
+    if enable_debug_validation && enbale_portability_enumeration {
+        instance_info = InstanceCreateInfo::default()
+            .flags(InstanceCreateFlags::ENUMERATE_PORTABILITY_KHR)
+            .application_info(app_info)
+            .enabled_layer_names(&enabled_layers)
+            .enabled_extension_names(&enabled_instance_extensions);
+    } else if enable_debug_validation && !enbale_portability_enumeration {
+        instance_info = InstanceCreateInfo::default()
+            .application_info(app_info)
+            .enabled_layer_names(&enabled_layers)
+    } else if !enable_debug_validation && enbale_portability_enumeration {
+        instance_info = InstanceCreateInfo::default()
+            .flags(InstanceCreateFlags::ENUMERATE_PORTABILITY_KHR)
+            .application_info(app_info)
+            .enabled_extension_names(&enabled_instance_extensions);
     } else {
-        instance_info = InstanceCreateInfo {
-            p_application_info: app_info,
-            ..Default::default()
-        }
+        instance_info = InstanceCreateInfo::default()
+            .application_info(app_info);
     }
     
     unsafe { entry.create_instance(&instance_info, None) }
