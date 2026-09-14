@@ -92,7 +92,7 @@ macro_rules! log {
         if crate::DEBUG_LOGS.load(std::sync::atomic::Ordering::Relaxed) {
             #[cfg(target_os = "android")]
             crate::logging::android::android_log(
-                crate::logging::android::AndroidLogPriority::Debug,
+                crate::logging::android::AndroidLogPriority::Info,
                 stringify!($function_name),
                 $message
             );
