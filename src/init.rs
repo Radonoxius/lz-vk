@@ -1,8 +1,6 @@
-use std::sync::atomic::Ordering::Relaxed;
-
 use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, ExtensionProperties, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME}};
 
-use crate::{DEBUG_LOGS, LAYER_KHRONOS_VALIDATION_NAME};
+use crate::{LAYER_KHRONOS_VALIDATION_NAME, logging::log};
 
 /// Finds if `VK_KHR_portability_enumeration` Instance extension is supported.
 /// Usrful for supporting Non-Conformant drivers & MoltenVK
@@ -14,23 +12,17 @@ pub fn is_portability_enumeration_supported(
             .extension_name_as_c_str();
 
         if let Err(_) = instance_extension_name {
-            if DEBUG_LOGS.load(Relaxed) {
-                println!("[is_portability_enumeration_supported]: false");
-            }
+            log!(is_portability_enumeration_supported, "false");
             return false;
         } else {
             if unsafe { instance_extension_name.unwrap_unchecked() } == KHR_PORTABILITY_ENUMERATION_NAME {
-                if DEBUG_LOGS.load(Relaxed) {
-                    println!("[is_portability_enumeration_supported]: true");
-                }
+                log!(is_portability_enumeration_supported, "true");
                 return true;
             }
         }
     }
 
-    if DEBUG_LOGS.load(Relaxed) {
-        println!("[is_portability_enumeration_supported]: false");
-    }
+    log!(is_portability_enumeration_supported, "false");
     false
 }
 

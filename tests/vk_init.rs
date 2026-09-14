@@ -1,5 +1,5 @@
-use ash::{Entry, vk::{ApplicationInfo, make_api_version}};
-use lz_vk::init::{init, is_portability_enumeration_supported};
+use ash::{Entry, vk::ApplicationInfo};
+use lz_vk::{LZVK_BASELINE_VULKAN_API_VERSION, init::{init, is_portability_enumeration_supported}};
 
 // Test `init` with Khronos Validation Layer enabled.
 // Requires your machine to have vulkan development headers and related packages
@@ -11,7 +11,7 @@ use lz_vk::init::{init, is_portability_enumeration_supported};
 fn init_test() {
     let entry = Entry::linked();
     let app_info = ApplicationInfo {
-        api_version: make_api_version(0, 1, 1, 0),
+        api_version: LZVK_BASELINE_VULKAN_API_VERSION,
         ..Default::default()
     };
 
@@ -36,7 +36,7 @@ fn init_test() {
 fn init_test_no_validation() {
     let entry = Entry::linked();
     let app_info = ApplicationInfo {
-        api_version: make_api_version(0, 1, 1, 0),
+        api_version: LZVK_BASELINE_VULKAN_API_VERSION,
         ..Default::default()
     };
 
