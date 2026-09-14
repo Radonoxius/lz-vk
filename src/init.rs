@@ -3,7 +3,7 @@ use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, ExtensionPro
 use crate::{LAYER_KHRONOS_VALIDATION_NAME, logging::log};
 
 /// Finds if `VK_KHR_portability_enumeration` Instance extension is supported.
-/// Usrful for supporting Non-Conformant drivers & MoltenVK
+/// Useful to query support for Non-Conformant drivers & MoltenVK
 pub fn is_portability_enumeration_supported(
     instance_extensions: &Vec<ExtensionProperties>
 ) -> bool {

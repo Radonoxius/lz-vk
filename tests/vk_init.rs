@@ -1,5 +1,5 @@
 use ash::{Entry, vk::ApplicationInfo};
-use lz_vk::{LZVK_BASELINE_VULKAN_API_VERSION, init::{init, is_portability_enumeration_supported}};
+use lz_vk::{LZVK_BASELINE_VULKAN_API_VERSION, init::{init, is_portability_enumeration_supported}, logging::{stop_debug_region, start_debug_region}};
 
 // Test `init` with Khronos Validation Layer enabled.
 // Requires your machine to have vulkan development headers and related packages
@@ -15,6 +15,8 @@ fn init_test() {
         ..Default::default()
     };
 
+    start_debug_region();
+
     let instance_extensions = unsafe {
         entry.enumerate_instance_extension_properties(None).unwrap()
     };
@@ -24,6 +26,8 @@ fn init_test() {
         true,
         is_portability_enumeration_supported(&instance_extensions)
     );
+
+    stop_debug_region();
 
     if let Err(_) = instance {
         instance.unwrap();
@@ -40,6 +44,8 @@ fn init_test_no_validation() {
         ..Default::default()
     };
 
+    start_debug_region();
+
     let instance_extensions = unsafe {
         entry.enumerate_instance_extension_properties(None).unwrap()
     };
@@ -49,6 +55,8 @@ fn init_test_no_validation() {
         false,
         is_portability_enumeration_supported(&instance_extensions)
     );
+
+    stop_debug_region();
 
     if let Err(_) = instance {
         instance.unwrap();

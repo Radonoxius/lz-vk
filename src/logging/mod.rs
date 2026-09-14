@@ -2,17 +2,18 @@ use std::sync::atomic::Ordering::SeqCst;
 
 use crate::DEBUG_LOGS;
 
-/// Enables Debug Logs within a region ended with `disable_debug_region`.
+/// Enables Debug Logs within a region ended with `stop_debug_region`.
 /// Useful to debug a region of code (or everything). Safe for multi-threaded use
-pub fn enable_debug_region() {
+pub fn start_debug_region() {
     DEBUG_LOGS.store(true, SeqCst);
 }
 
 /// Closes the Debug Logs region. Safe for multi-threaded use
-pub fn disable_debug_region() {
+pub fn stop_debug_region() {
     DEBUG_LOGS.store(false, SeqCst);
 }
 
+#[cfg(target_os = "android")]
 pub mod android {
     use std::{ffi::{CStr, c_char}, sync::atomic::Ordering::Relaxed};
 
@@ -89,13 +90,12 @@ pub mod android {
 macro_rules! log {
     ($function_name:ident, $message:literal) => {
         if crate::DEBUG_LOGS.load(std::sync::atomic::Ordering::Relaxed) {
-            if cfg!(target_os = "android") {
-                crate::logging::android::android_log(
-                    crate::logging::android::AndroidLogPriority::Debug,
-                    stringify!($function_name),
-                    $message
-                );
-            }
+            #[cfg(target_os = "android")]
+            crate::logging::android::android_log(
+                crate::logging::android::AndroidLogPriority::Debug,
+                stringify!($function_name),
+                $message
+            );
 
             println!("[{}]: {}", stringify!($function_name), $message);
         }
