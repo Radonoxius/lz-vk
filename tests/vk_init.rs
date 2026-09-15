@@ -1,5 +1,5 @@
 use ash::{Entry, vk::ApplicationInfo};
-use lz_vk::{LZVK_BASELINE_VULKAN_API_VERSION, init::{enumerate_instance_extensions, init, is_portability_enumeration_supported}, logging::{start_debug_region, stop_debug_region}};
+use lz_vk::{LZVK_BASELINE_VULKAN_API_VERSION, init::init, logging::{start_debug_region, stop_debug_region}, utils::{enumerate_instance_extensions, is_portability_enumeration_supported}};
 
 // Test `init` with Khronos Validation Layer enabled.
 // Requires your machine to have vulkan development headers and related packages
@@ -18,7 +18,7 @@ fn init_test() {
 
     start_debug_region();
 
-    let instance_extensions = enumerate_instance_extensions(&entry);
+    let instance_extensions = unsafe { enumerate_instance_extensions(&entry) };
     let instance = unsafe {
         init(
             &entry,
@@ -48,7 +48,7 @@ fn init_test_no_validation() {
 
     start_debug_region();
 
-    let instance_extensions = enumerate_instance_extensions(&entry);
+    let instance_extensions = unsafe { enumerate_instance_extensions(&entry) };
     let instance = unsafe {
         init(
             &entry,

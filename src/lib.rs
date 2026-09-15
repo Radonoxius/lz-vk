@@ -7,6 +7,7 @@ pub mod compression;
 pub mod arm_mali;
 
 pub mod logging;
+pub mod utils;
 pub mod init;
 
 /// Represents the baseline Vulkan API version required by `lz-vk`
