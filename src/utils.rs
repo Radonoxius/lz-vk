@@ -47,7 +47,7 @@ pub unsafe fn enumerate_instance_extensions(
     }
 }
 
-/// Returns the name of the Application or `Unnamed` if name isnt valid UTF-8.
+/// Returns the name of the Application or "Unnamed" if name isnt valid UTF-8.
 /// 
 /// SAFETY: Application Name must be null terminated!
 pub unsafe fn get_application_name<'a>(
