@@ -26,6 +26,7 @@ pub mod android {
     const LOG_ID_MAIN: i32 = 0;
 
     /// Represents the priority of the log in Android logs
+    #[allow(unused)]
     pub(crate) enum AndroidLogPriority {
         Unknown,
         Default,
