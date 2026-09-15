@@ -4,27 +4,27 @@ use ash::{Entry, vk::{ApplicationInfo, ExtensionProperties, KHR_PORTABILITY_ENUM
 
 use crate::logging::log;
 
-/// Finds if `VK_KHR_portability_enumeration` Instance extension is supported.
-/// Useful to query support for Non-Conformant drivers & MoltenVK
-pub fn is_portability_enumeration_supported(
-    instance_extensions: &Vec<ExtensionProperties>
-) -> bool {
-    for instance_extension in instance_extensions {
-        let instance_extension_name = instance_extension
-            .extension_name_as_c_str();
+/// Returns the name of the Application or "Unnamed" if it isnt valid UTF-8.
+/// 
+/// SAFETY: `app_info.p_application_name` must be null terminated!
+pub unsafe fn get_application_name<'a>(
+    app_info: &ApplicationInfo<'a>
+) -> &'a str {
+    let name = unsafe {
+        CStr::from_ptr(app_info.p_application_name)
+    }.to_str();
 
-        if let Err(e) = instance_extension_name {
-            log!(is_portability_enumeration_supported, "{:?}", e);
-            return false;
-        } else {
-            if unsafe { instance_extension_name.unwrap_unchecked() } == KHR_PORTABILITY_ENUMERATION_NAME {
-                return true;
-            }
-        }
+    return if let Err(e) = name {
+        log!(
+            get_application_name,
+            "{:?}",
+            e
+        );
+
+        "Unnamed"
+    } else {
+        unsafe { name.unwrap_unchecked() }
     }
-
-    log!(is_portability_enumeration_supported, "false");
-    false
 }
 
 /// Enumerates all available Instance Extensions.
@@ -47,25 +47,25 @@ pub unsafe fn enumerate_instance_extensions(
     }
 }
 
-/// Returns the name of the Application or "Unnamed" if it isnt valid UTF-8.
-/// 
-/// SAFETY: `app_info.p_application_name` must be null terminated!
-pub unsafe fn get_application_name<'a>(
-    app_info: &ApplicationInfo<'a>
-) -> &'a str {
-    let name = unsafe {
-        CStr::from_ptr(app_info.p_application_name)
-    }.to_str();
+/// Finds if `VK_KHR_portability_enumeration` Instance extension is supported.
+/// Useful to query support for Non-Conformant drivers & MoltenVK
+pub fn is_portability_enumeration_supported(
+    instance_extensions: &Vec<ExtensionProperties>
+) -> bool {
+    for instance_extension in instance_extensions {
+        let instance_extension_name = instance_extension
+            .extension_name_as_c_str();
 
-    return if let Err(e) = name {
-        log!(
-            get_application_name,
-            "{:?}",
-            e
-        );
-
-        "Unnamed"
-    } else {
-        unsafe { name.unwrap_unchecked() }
+        if let Err(e) = instance_extension_name {
+            log!(is_portability_enumeration_supported, "{:?}", e);
+            return false;
+        } else {
+            if unsafe { instance_extension_name.unwrap_unchecked() } == KHR_PORTABILITY_ENUMERATION_NAME {
+                return true;
+            }
+        }
     }
+
+    log!(is_portability_enumeration_supported, "false");
+    false
 }
