@@ -51,7 +51,7 @@ pub unsafe fn enumerate_instance_extensions(
 /// 
 /// SAFETY: Application Name must be null terminated!
 pub unsafe fn get_application_name<'a>(
-    app_info: &'a ApplicationInfo
+    app_info: &ApplicationInfo<'a>
 ) -> &'a str {
     let name = unsafe {
         CStr::from_ptr(app_info.p_application_name)
