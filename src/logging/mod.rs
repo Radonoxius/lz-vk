@@ -23,7 +23,7 @@ pub mod android {
     pub const LOG_TAG: &CStr = c"lz-vk";
 
     /// Represents the priority of the log in Android logs
-    pub enum AndroidLogPriority {
+    pub(crate) enum AndroidLogPriority {
         Unknown,
         Default,
         Verbose,
@@ -51,9 +51,11 @@ pub mod android {
         }
     }
 
-    // Logs to the `LOG_ID_MAIN` Android Log buffer.
-    // Safe for multi-threaded use
-    pub(crate) fn android_log(priority: AndroidLogPriority, function_name: &str, message: &str) {
+    /// Logs to the `LOG_ID_MAIN` Android Log buffer.
+    /// Safe for multi-threaded use
+    ///
+    /// SAFETY: Make sure that the log message size is less than 4KB!
+    pub(crate) unsafe fn android_log(priority: AndroidLogPriority, function_name: &str, message: &str) {
         if DEBUG_LOGS.load(Relaxed) {
             unsafe {
                 let log = format!("[{function_name}]: {message}\0");
@@ -87,15 +89,19 @@ pub mod android {
 /// the message string literal. Also supports format! semantics and additional args.
 /// 
 /// Safe for multi-threaded use
+/// 
+/// SAFETY: Make sure that the log message size is less than 4KB!
 macro_rules! log {
     ($function_name:ident, $message:literal) => {
         if crate::DEBUG_LOGS.load(std::sync::atomic::Ordering::Relaxed) {
             #[cfg(target_os = "android")]
-            crate::logging::android::android_log(
-                crate::logging::android::AndroidLogPriority::Info,
-                stringify!($function_name),
-                $message
-            );
+            unsafe {
+                crate::logging::android::android_log(
+                    crate::logging::android::AndroidLogPriority::Info,
+                    stringify!($function_name),
+                    $message
+                );
+            }
 
             println!("[{}]: {}", stringify!($function_name), $message);
         }
@@ -103,11 +109,13 @@ macro_rules! log {
     ($function_name:ident, $fmt:literal, $($arg:tt)*) => {
         if crate::DEBUG_LOGS.load(std::sync::atomic::Ordering::Relaxed) {
             #[cfg(target_os = "android")]
-            crate::logging::android::android_log(
-                crate::logging::android::AndroidLogPriority::Info,
-                stringify!($function_name),
-                &format!($fmt, $($arg)*)
-            );
+            unsafe {
+                crate::logging::android::android_log(
+                    crate::logging::android::AndroidLogPriority::Info,
+                    stringify!($function_name),
+                    &format!($fmt, $($arg)*)
+                );
+            }
 
             println!("[{}]: {}", stringify!($function_name), format!($fmt, $($arg)*));
         }
