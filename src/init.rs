@@ -1,6 +1,6 @@
 use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME, PhysicalDevice}};
 
-use crate::{LAYER_KHRONOS_VALIDATION_NAME, logging::log, utils::get_application_name};
+use crate::{LAYER_KHRONOS_VALIDATION_NAME, logging::log, init_utils::get_application_name};
 
 /// SAFETY: `app_info.p_application_name` must be null terminated!
 pub unsafe fn init(

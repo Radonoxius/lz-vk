@@ -9,7 +9,7 @@ pub mod qualcomm;
 pub mod nvidia;
 
 pub mod logging;
-pub mod utils;
+pub mod init_utils;
 pub mod init;
 
 /// Represents the baseline Vulkan API version required by `lz-vk`
