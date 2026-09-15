@@ -4,7 +4,9 @@ use ash::vk::make_api_version;
 
 pub mod compression;
 
-pub mod arm_mali;
+pub mod arm;
+pub mod qualcomm;
+pub mod nvidia;
 
 pub mod logging;
 pub mod utils;
