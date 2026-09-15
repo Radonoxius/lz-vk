@@ -1,3 +1,5 @@
+use std::ffi::CStr;
+
 use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, ExtensionProperties, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME}};
 
 use crate::{LAYER_KHRONOS_VALIDATION_NAME, logging::log};
@@ -11,12 +13,11 @@ pub fn is_portability_enumeration_supported(
         let instance_extension_name = instance_extension
             .extension_name_as_c_str();
 
-        if let Err(_) = instance_extension_name {
-            log!(is_portability_enumeration_supported, "false");
+        if let Err(e) = instance_extension_name {
+            log!(is_portability_enumeration_supported, "{:?}", e);
             return false;
         } else {
             if unsafe { instance_extension_name.unwrap_unchecked() } == KHR_PORTABILITY_ENUMERATION_NAME {
-                log!(is_portability_enumeration_supported, "true");
                 return true;
             }
         }
@@ -26,13 +27,31 @@ pub fn is_portability_enumeration_supported(
     false
 }
 
-pub fn init(
+/// Enumerates all available Instance Extensions
+pub fn enumerate_instance_extensions(entry: &Entry) -> Vec<ExtensionProperties> {
+    let instance_extensions = unsafe {
+        entry.enumerate_instance_extension_properties(None)
+    };
+
+    return if let Err(e) = instance_extensions {
+        log!(enumerate_instance_extensions, "{:?}", e);
+        Vec::new()
+    } else {
+        unsafe {
+            instance_extensions.unwrap_unchecked()
+        }
+    }
+}
+
+/// SAFETY: Application Name must be null terminated & valid UTF-8
+pub unsafe fn init(
     entry: &Entry,
     app_info: &ApplicationInfo,
     enable_debug_validation: bool,
     enbale_portability_enumeration: bool
 ) -> VkResult<Instance> {
     let instance_info;
+    let applicaion_name = unsafe { CStr::from_ptr(app_info.p_application_name).to_str().unwrap_unchecked() };
 
     let enabled_layers = [LAYER_KHRONOS_VALIDATION_NAME.as_ptr()];
     let enabled_instance_extensions = [KHR_PORTABILITY_ENUMERATION_NAME.as_ptr()];
@@ -57,5 +76,26 @@ pub fn init(
             .application_info(app_info);
     }
     
-    unsafe { entry.create_instance(&instance_info, None) }
+    let instance = unsafe {
+        entry.create_instance(&instance_info, None)
+    };
+
+    if let Err(e) = instance {
+        log!(
+            init,
+            "[AppName: {}]: {:?}",
+            applicaion_name,
+            e
+        );
+    } else {
+        log!(
+            init,
+            "[AppName: {}]: enable_debug_validation: {}, enbale_portability_enumeration: {}",
+            applicaion_name,
+            enable_debug_validation,
+            enbale_portability_enumeration
+        );
+    }
+
+    instance
 }

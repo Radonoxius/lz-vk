@@ -1,5 +1,5 @@
 use ash::{Entry, vk::ApplicationInfo};
-use lz_vk::{LZVK_BASELINE_VULKAN_API_VERSION, init::{init, is_portability_enumeration_supported}, logging::{stop_debug_region, start_debug_region}};
+use lz_vk::{LZVK_BASELINE_VULKAN_API_VERSION, init::{enumerate_instance_extensions, init, is_portability_enumeration_supported}, logging::{start_debug_region, stop_debug_region}};
 
 // Test `init` with Khronos Validation Layer enabled.
 // Requires your machine to have vulkan development headers and related packages
@@ -12,20 +12,21 @@ fn init_test() {
     let entry = Entry::linked();
     let app_info = ApplicationInfo {
         api_version: LZVK_BASELINE_VULKAN_API_VERSION,
+        p_application_name: c"lz-vk:init_test".as_ptr(),
         ..Default::default()
     };
 
     start_debug_region();
 
-    let instance_extensions = unsafe {
-        entry.enumerate_instance_extension_properties(None).unwrap()
+    let instance_extensions = enumerate_instance_extensions(&entry);
+    let instance = unsafe {
+        init(
+            &entry,
+            &app_info,
+            true,
+            is_portability_enumeration_supported(&instance_extensions)
+        )
     };
-    let instance = init(
-        &entry,
-        &app_info,
-        true,
-        is_portability_enumeration_supported(&instance_extensions)
-    );
 
     stop_debug_region();
 
@@ -41,20 +42,21 @@ fn init_test_no_validation() {
     let entry = Entry::linked();
     let app_info = ApplicationInfo {
         api_version: LZVK_BASELINE_VULKAN_API_VERSION,
+        p_application_name: c"lz-vk:init_test_no_validation".as_ptr(),
         ..Default::default()
     };
 
     start_debug_region();
 
-    let instance_extensions = unsafe {
-        entry.enumerate_instance_extension_properties(None).unwrap()
+    let instance_extensions = enumerate_instance_extensions(&entry);
+    let instance = unsafe {
+        init(
+            &entry,
+            &app_info,
+            true,
+            is_portability_enumeration_supported(&instance_extensions)
+        )
     };
-    let instance = init(
-        &entry,
-        &app_info,
-        false,
-        is_portability_enumeration_supported(&instance_extensions)
-    );
 
     stop_debug_region();
 

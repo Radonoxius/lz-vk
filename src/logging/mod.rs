@@ -81,10 +81,10 @@ pub mod android {
 /// Generic logging macro
 /// that prints the log to `stdout`.
 /// 
-/// On Android, this logs to the `LOG_ID_MAIN` Log buffer as well.
+/// Additionally, on Android this logs to the `LOG_ID_MAIN` Log buffer as well.
 /// 
 /// The first argument is the function name (identifier) and the second is
-/// the message string
+/// the message string literal. Also supports format! semantics and additional args.
 /// 
 /// Safe for multi-threaded use
 macro_rules! log {
@@ -98,6 +98,18 @@ macro_rules! log {
             );
 
             println!("[{}]: {}", stringify!($function_name), $message);
+        }
+    };
+    ($function_name:ident, $fmt:literal, $($arg:tt)*) => {
+        if crate::DEBUG_LOGS.load(std::sync::atomic::Ordering::Relaxed) {
+            #[cfg(target_os = "android")]
+            crate::logging::android::android_log(
+                crate::logging::android::AndroidLogPriority::Info,
+                stringify!($function_name),
+                &format!($fmt, $($arg)*)
+            );
+
+            println!("[{}]: {}", stringify!($function_name), format!($fmt, $($arg)*));
         }
     };
 }
