@@ -53,7 +53,7 @@ fn init_test_no_validation() {
         init(
             &entry,
             &app_info,
-            true,
+            false,
             is_portability_enumeration_supported(&instance_extensions)
         )
     };
