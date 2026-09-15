@@ -2,7 +2,7 @@ use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, InstanceCrea
 
 use crate::{LAYER_KHRONOS_VALIDATION_NAME, logging::log, utils::get_application_name};
 
-/// SAFETY: Application Name must be null terminated!
+/// SAFETY: `app_info.p_application_name` must be null terminated!
 pub unsafe fn init(
     entry: &Entry,
     app_info: &ApplicationInfo,
