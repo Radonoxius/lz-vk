@@ -1,5 +1,6 @@
-use ash::{Entry, vk::ApplicationInfo};
-use lz_vk::{LZVK_BASELINE_VULKAN_API_VERSION, init::init, logging::{start_debug_region, stop_debug_region}, utils::{enumerate_instance_extensions, is_portability_enumeration_supported}};
+use ash::Entry;
+use lz_vk::{init::init, logging::{start_debug_region, stop_debug_region}, utils::{enumerate_instance_extensions, is_portability_enumeration_supported}};
+use test_utils::test_info;
 
 // Test `init` with Khronos Validation Layer enabled.
 // Requires your machine to have vulkan development headers and related packages
@@ -10,11 +11,7 @@ use lz_vk::{LZVK_BASELINE_VULKAN_API_VERSION, init::init, logging::{start_debug_
 #[cfg_attr(target_os = "android", ignore)]
 fn init_test() {
     let entry = Entry::linked();
-    let app_info = ApplicationInfo {
-        api_version: LZVK_BASELINE_VULKAN_API_VERSION,
-        p_application_name: c"lz-vk:init_test".as_ptr(),
-        ..Default::default()
-    };
+    let app_info = test_info(c"lz-vk:init_test");
 
     start_debug_region();
 
@@ -40,11 +37,7 @@ fn init_test() {
 #[test]
 fn init_test_no_validation() {
     let entry = Entry::linked();
-    let app_info = ApplicationInfo {
-        api_version: LZVK_BASELINE_VULKAN_API_VERSION,
-        p_application_name: c"lz-vk:init_test_no_validation".as_ptr(),
-        ..Default::default()
-    };
+    let app_info = test_info(c"lz-vk:init_test_no_validation");
 
     start_debug_region();
 

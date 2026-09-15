@@ -39,6 +39,16 @@ version = "0.1.0"
 dependencies = [
  "ash",
  "libc",
+ "test-utils",
+]
+
+[[package]]
+name = "test-utils"
+version = "0.1.0"
+dependencies = [
+ "ash",
+ "libc",
+ "lz-vk",
 ]
 
 [[package]]
