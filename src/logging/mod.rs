@@ -22,6 +22,9 @@ pub mod android {
     /// Represents the log tag of this library in Android logs
     pub const LOG_TAG: &CStr = c"lz-vk";
 
+    /// Represents the ID of the `LOG_ID_MAIN` log buffer in Android
+    const LOG_ID_MAIN: i32 = 0;
+
     /// Represents the priority of the log in Android logs
     pub(crate) enum AndroidLogPriority {
         Unknown,
@@ -61,7 +64,7 @@ pub mod android {
                 let log = format!("[{function_name}]: {message}\0");
 
                 let _errno = __android_log_buf_write(
-                    0,
+                    LOG_ID_MAIN,
                     priority.into(),
                     LOG_TAG.as_ptr(),
                     log.as_ptr() as *const c_char
