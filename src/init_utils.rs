@@ -1,13 +1,13 @@
 use std::ffi::CStr;
 
-use ash::{Entry, vk::{ApplicationInfo, ExtensionProperties, KHR_PORTABILITY_ENUMERATION_NAME}};
+use ash::{Entry, Instance, vk::{PhysicalDevice, ApplicationInfo, ExtensionProperties, KHR_PORTABILITY_ENUMERATION_NAME}};
 
 #[allow(unused)]
 use crate::logging::android::AndroidLogPriority;
 
-use crate::logging::log;
+use crate::{INVALID, logging::log};
 
-/// Returns the name of the Application or "Unnamed" if it isnt valid UTF-8.
+/// Returns the name of the Application or `INVALID` if it isnt valid UTF-8.
 /// 
 /// SAFETY: `app_info.p_application_name` must be null terminated!
 pub unsafe fn get_application_name<'a>(
@@ -25,7 +25,7 @@ pub unsafe fn get_application_name<'a>(
             e
         );
 
-        "Unnamed"
+        INVALID
     } else {
         unsafe { name.unwrap_unchecked() }
     }
@@ -72,4 +72,41 @@ pub fn is_portability_enumeration_supported(
 
     log!(is_portability_enumeration_supported, "false");
     false
+}
+
+/// Returns the names of all extensions supported by the GPU
+/// 
+/// If an extension name isnt valid UTF-8, `INVALID` is used instead
+pub fn get_gpu_extension_names(
+    instance: &Instance,
+    gpu: &PhysicalDevice
+) -> Vec<String> {
+    let gpu_extensions = unsafe {
+        instance.enumerate_device_extension_properties(*gpu)
+    };
+
+    if let Err(e) = gpu_extensions {
+        log!(get_gpu_extension_names, AndroidLogPriority::Error, "{:?}", e);
+        Vec::new()
+    } else {
+        let gpu_extensions = unsafe { gpu_extensions.unwrap_unchecked() };
+        let mut extension_names = Vec::new();
+
+        for extension in gpu_extensions {
+            let extension_name = unsafe {
+                CStr::from_ptr(&raw const extension.extension_name[0])
+            }.to_str();
+
+            extension_names.push(
+                if let Err(e) = extension_name {
+                    log!(get_gpu_extension_names, AndroidLogPriority::Error, "{:?}", e);
+                    String::from(INVALID)
+                } else {
+                    unsafe { extension_name.unwrap_unchecked() }.to_string()
+                }
+            );
+        }
+
+        extension_names
+    }
 }
