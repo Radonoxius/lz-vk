@@ -78,16 +78,15 @@ pub fn get_supported_gpus(
 
         let supported_gpus = all_physical_devices.into_iter()
             .filter(|physical_device| {
-                let mut device_properties2: MaybeUninit<PhysicalDeviceProperties2> = MaybeUninit::uninit();
+                let mut device_properties2: PhysicalDeviceProperties2 = PhysicalDeviceProperties2::default();
 
                 unsafe {
                     instance
                         .get_physical_device_properties2(
                             *physical_device,
-                            device_properties2.as_mut_ptr().as_mut_unchecked()
+                            &mut device_properties2
                         )
                 };
-                let device_properties2 = unsafe { device_properties2.assume_init_ref() };
                 
                 if
                     api_version_major(device_properties2.properties.api_version) >= 1 &&
