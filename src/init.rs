@@ -1,4 +1,6 @@
-use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME, PhysicalDevice}};
+use std::mem::MaybeUninit;
+
+use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME, PhysicalDevice, PhysicalDeviceProperties2, PhysicalDeviceType, api_version_major, api_version_minor}};
 
 use crate::{LAYER_KHRONOS_VALIDATION_NAME, logging::log, init_utils::get_application_name};
 
@@ -59,18 +61,53 @@ pub unsafe fn init(
     instance
 }
 
-pub fn get_physical_gpus(
+pub fn get_supported_gpus(
     instance: &Instance
 ) -> VkResult<Vec<PhysicalDevice>> {
-    let physical_gpus = unsafe { instance.enumerate_physical_devices() };
+    let all_physical_devices = unsafe { instance.enumerate_physical_devices() };
 
-    if let Err(e) = physical_gpus {
+    if let Err(e) = all_physical_devices {
         log!(
-            get_physical_gpus,
+            get_supported_gpus,
             "{:?}",
             e
         );
-    }
+        Err(e)
+    } else {
+        let all_physical_devices = unsafe { all_physical_devices.unwrap_unchecked() };
 
-    physical_gpus
+        let supported_gpus = all_physical_devices.into_iter()
+            .filter(|physical_device| {
+                let mut device_properties2: MaybeUninit<PhysicalDeviceProperties2> = MaybeUninit::uninit();
+
+                unsafe {
+                    instance
+                        .get_physical_device_properties2(
+                            *physical_device,
+                            device_properties2.as_mut_ptr().as_mut_unchecked()
+                        )
+                };
+                let device_properties2 = unsafe { device_properties2.assume_init_ref() };
+                
+                if
+                    api_version_major(device_properties2.properties.api_version) >= 1 &&
+                    api_version_minor(device_properties2.properties.api_version) >= 1
+                {
+                    match device_properties2.properties.device_type {
+                        PhysicalDeviceType::DISCRETE_GPU | PhysicalDeviceType::INTEGRATED_GPU => true,
+                        _ => false
+                    }
+                } else {
+                    false
+                }
+            })
+            .collect();
+
+        log!(
+            get_supported_gpus,
+            "{:?}",
+            supported_gpus
+        );
+        Ok(supported_gpus)
+    }
 }
