@@ -71,14 +71,8 @@ fn is_gpu(
     device_properties2: PhysicalDeviceProperties2
 ) -> bool {
     match device_properties2.properties.device_type {
-        PhysicalDeviceType::DISCRETE_GPU | PhysicalDeviceType::INTEGRATED_GPU => {
-            log!(is_gpu, AndroidLogPriority::Info, "true");
-            true
-        },
-        _ => {
-            log!(is_gpu, "false");
-            false
-        }
+        PhysicalDeviceType::DISCRETE_GPU | PhysicalDeviceType::INTEGRATED_GPU => true,
+        _ => false
     }
 }
 
@@ -91,7 +85,6 @@ fn is_compute_queue_supported(
         instance.get_physical_device_queue_family_properties2_len(*physical_device)
     };
     if queue_family_properties2_count == 0 {
-        log!(is_compute_queue_supported, "false");
         return false;
     }
 
@@ -112,12 +105,10 @@ fn is_compute_queue_supported(
             queue_family_properties2[i].queue_family_properties.queue_flags & QueueFlags::COMPUTE == QueueFlags::COMPUTE &&
             queue_family_properties2[i].queue_family_properties.queue_count >= 1
         {
-            log!(is_compute_queue_supported, AndroidLogPriority::Info, "true");
             return true;
         }
     }
 
-    log!(is_compute_queue_supported, "false");
     false
 }
 
@@ -154,9 +145,14 @@ pub fn get_supported_gpus(
                     api_version_major(device_properties2.properties.api_version) >= LZVK_BASELINE_MAJOR &&
                     api_version_minor(device_properties2.properties.api_version) >= LZVK_BASELINE_MINOR
                 {
-                    if is_gpu(device_properties2) {
+                    if
+                        is_gpu(device_properties2) &&
                         is_compute_queue_supported(instance, physical_device)
+                    {
+                        log!(get_supported_gpus, AndroidLogPriority::Info, "true");
+                        true
                     } else {
+                        log!(get_supported_gpus, "false");
                         false
                     }
                 } else {
