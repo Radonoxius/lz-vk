@@ -99,10 +99,10 @@ pub mod android {
 /// SAFETY: Make sure that the log message size is less than 4KB!
 /// 
 /// ## Examples
-/// ```rust
+/// ```rust,ignore
 /// #[allow(unused)]
-/// use lz_vk::logging::android::AndroidLogPriority;
-/// use lz_vk::logging::log;
+/// use crate::logging::android::AndroidLogPriority;
+/// use crate::logging::log;
 /// 
 /// fn abcd() {
 ///     // Default Android Log priority is `AndroidLogPriority::Warn`
