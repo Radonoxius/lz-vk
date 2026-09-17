@@ -106,7 +106,7 @@ fn is_compute_queue_supported(
 
     for i in 0..queue_family_properties2.capacity() {
         if
-            queue_family_properties2[i].queue_family_properties.queue_flags == QueueFlags::COMPUTE &&
+            queue_family_properties2[i].queue_family_properties.queue_flags & QueueFlags::COMPUTE == QueueFlags::COMPUTE &&
             queue_family_properties2[i].queue_family_properties.queue_count >= 1
         {
             return true;
