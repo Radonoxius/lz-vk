@@ -1,6 +1,6 @@
 use std::{ffi::CStr, sync::atomic::AtomicBool};
 
-use ash::vk::API_VERSION_1_1;
+use ash::vk::{API_VERSION_1_1, api_version_major, api_version_minor};
 
 pub mod compression;
 
@@ -18,8 +18,14 @@ pub mod init;
 /// Represents the baseline Vulkan API version required by `lz-vk`
 pub const LZVK_BASELINE_VULKAN_API_VERSION: u32 = API_VERSION_1_1;
 
-pub(crate) const LAYER_KHRONOS_VALIDATION_NAME: &CStr =
-    unsafe { CStr::from_bytes_with_nul_unchecked(b"VK_LAYER_KHRONOS_validation\0") };
+/// Represents the major of the baseline Vulkan API version required by `lz-vk`
+pub(crate) const LZVK_BASELINE_MAJOR: u32 = api_version_major(LZVK_BASELINE_VULKAN_API_VERSION);
+/// Represents the minor of the baseline Vulkan API version required by `lz-vk`
+pub(crate) const LZVK_BASELINE_MINOR: u32 = api_version_minor(LZVK_BASELINE_VULKAN_API_VERSION);
 
-// Specifies whether debug logs are enabled
+pub(crate) const LAYER_KHRONOS_VALIDATION_NAME: &CStr = c"VK_LAYER_KHRONOS_validation";
+
+/// Specifies whether debug logs are enabled.
+///
+/// Disabled by default
 pub(crate) static DEBUG_LOGS: AtomicBool = AtomicBool::new(false);

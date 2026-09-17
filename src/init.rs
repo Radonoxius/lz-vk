@@ -1,9 +1,9 @@
-use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME, PhysicalDevice, PhysicalDeviceProperties2, PhysicalDeviceType, QueueFamilyProperties2, api_version_major, api_version_minor}};
+use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME, PhysicalDevice, PhysicalDeviceProperties2, PhysicalDeviceType, QueueFamilyProperties2, QueueFlags, api_version_major, api_version_minor}};
 
 #[allow(unused)]
 use crate::logging::android::AndroidLogPriority;
 
-use crate::{LAYER_KHRONOS_VALIDATION_NAME, init_utils::get_application_name, logging::log};
+use crate::{LAYER_KHRONOS_VALIDATION_NAME, LZVK_BASELINE_MAJOR, LZVK_BASELINE_MINOR, init_utils::get_application_name, logging::log};
 
 /// Initializes a Vulkan instance based on the given parameters
 /// 
@@ -66,7 +66,10 @@ pub unsafe fn init(
     instance
 }
 
-fn is_gpu(device_properties2: PhysicalDeviceProperties2) -> bool {
+/// Returns `true` if the given device is a GPU
+fn is_gpu(
+    device_properties2: PhysicalDeviceProperties2
+) -> bool {
     match device_properties2.properties.device_type {
         PhysicalDeviceType::DISCRETE_GPU | PhysicalDeviceType::INTEGRATED_GPU => true,
         _ => {
@@ -74,6 +77,44 @@ fn is_gpu(device_properties2: PhysicalDeviceProperties2) -> bool {
             false
         }
     }
+}
+
+/// Returns `true` if the given device supports Compute queues/stages
+fn is_compute_queue_supported(
+    instance: &Instance,
+    physical_device: &PhysicalDevice
+) -> bool {
+    let queue_family_properties2_count = unsafe {
+        instance.get_physical_device_queue_family_properties2_len(*physical_device)
+    };
+    if queue_family_properties2_count == 0 {
+        log!(is_compute_queue_supported, "false");
+        return false;
+    }
+
+    let mut queue_family_properties2 = Vec::with_capacity(queue_family_properties2_count);
+    for _ in 0..queue_family_properties2.capacity() {
+        queue_family_properties2.push(QueueFamilyProperties2::default());
+    }
+
+    unsafe {
+        instance.get_physical_device_queue_family_properties2(
+            *physical_device,
+            &mut queue_family_properties2
+        );
+    }
+
+    for i in 0..queue_family_properties2.capacity() {
+        if
+            queue_family_properties2[i].queue_family_properties.queue_flags == QueueFlags::COMPUTE &&
+            queue_family_properties2[i].queue_family_properties.queue_count >= 1
+        {
+            return true;
+        }
+    }
+
+    log!(is_compute_queue_supported, "false");
+    false
 }
 
 /// Returns a list of GPUs that are `lz-vk` compatible
@@ -106,29 +147,17 @@ pub fn get_supported_gpus(
                 };
                 
                 if
-                    api_version_major(device_properties2.properties.api_version) >= 1 &&
-                    api_version_minor(device_properties2.properties.api_version) >= 1
+                    api_version_major(device_properties2.properties.api_version) >= LZVK_BASELINE_MAJOR &&
+                    api_version_minor(device_properties2.properties.api_version) >= LZVK_BASELINE_MINOR
                 {
                     if is_gpu(device_properties2) {
-                        let mut queue_family_properties2 = Vec::with_capacity(
-                            unsafe { instance.get_physical_device_queue_family_properties2_len(*physical_device) }
-                        );
-                        for i in 0..queue_family_properties2.capacity() {
-                            queue_family_properties2[i] = QueueFamilyProperties2::default();
-                        }
-
-                        unsafe {
-                            instance.get_physical_device_queue_family_properties2(
-                                *physical_device,
-                                &mut queue_family_properties2
-                            );
-                        }
-
-                        true
+                        is_compute_queue_supported(instance, physical_device)
                     } else {
+                        log!(get_supported_gpus, "false");
                         false
                     }
                 } else {
+                    log!(get_supported_gpus, "false");
                     false
                 }
             })
