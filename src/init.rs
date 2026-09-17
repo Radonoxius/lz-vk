@@ -71,7 +71,10 @@ fn is_gpu(
     device_properties2: PhysicalDeviceProperties2
 ) -> bool {
     match device_properties2.properties.device_type {
-        PhysicalDeviceType::DISCRETE_GPU | PhysicalDeviceType::INTEGRATED_GPU => true,
+        PhysicalDeviceType::DISCRETE_GPU | PhysicalDeviceType::INTEGRATED_GPU => {
+            log!(is_gpu, AndroidLogPriority::Info, "true");
+            true
+        },
         _ => {
             log!(is_gpu, "false");
             false
@@ -109,6 +112,7 @@ fn is_compute_queue_supported(
             queue_family_properties2[i].queue_family_properties.queue_flags & QueueFlags::COMPUTE == QueueFlags::COMPUTE &&
             queue_family_properties2[i].queue_family_properties.queue_count >= 1
         {
+            log!(is_compute_queue_supported, AndroidLogPriority::Info, "true");
             return true;
         }
     }
@@ -153,7 +157,6 @@ pub fn get_supported_gpus(
                     if is_gpu(device_properties2) {
                         is_compute_queue_supported(instance, physical_device)
                     } else {
-                        log!(get_supported_gpus, "false");
                         false
                     }
                 } else {
