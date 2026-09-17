@@ -90,23 +90,27 @@ pub mod android {
 }
 
 /// Generic logging macro that prints the log to `stdout`.
-/// Additionally, on Android this logs to the `LOG_ID_MAIN` Log buffer as well.
+/// Additionally, on Android this logs to the `LOG_ID_MAIN` Log buffer.
 /// 
-/// Safe for multi-threaded use
+/// Default Android Log priority is `Warn`
+/// 
+/// Safe for multi-threaded use.
 /// 
 /// SAFETY: Make sure that the log message size is less than 4KB!
 /// 
 /// ## Examples
 /// ```rust
-/// use crate::logging::android::AndroidLogPriority::Info;
+/// #[allow(unused)]
+/// use crate::logging::android::AndroidLogPriority;
 /// 
 /// fn abcd() {
+///     // Default Android Log priority is `AndroidLogPriority::Warn`
 ///     log!(abcd, "Hello!");
 ///     log!(abcd, "{}, {}", "Hello", "World!");
 /// 
-///     // Advanced logging for Android
-///     log!(abcd, Info, "Hello!");
-///     log!(abcd, Info, "{}, {}", "Hello", "World!");
+///     // Advanced logging (effective on Android only)
+///     log!(abcd, AndroidLogPriority::Info, "Hello!");
+///     log!(abcd, AndroidLogPriority::Error, "{}, {}", "Hello", "World!");
 /// }
 /// ```
 macro_rules! log {
@@ -115,7 +119,7 @@ macro_rules! log {
             #[cfg(target_os = "android")]
             unsafe {
                 crate::logging::android::android_log(
-                    crate::logging::android::AndroidLogPriority::Info,
+                    crate::logging::android::AndroidLogPriority::Warn,
                     stringify!($function_name),
                     &format!($fmt $(, $($arg)*)?)
                 );
@@ -124,6 +128,7 @@ macro_rules! log {
             println!("[{}]: {}", stringify!($function_name), format!($fmt $(, $($arg)*)?));
         }
     };
+    
     ($function_name:ident, $android_prio:path, $fmt:literal $(, $($arg:tt)*)?) => {
         if crate::DEBUG_LOGS.load(std::sync::atomic::Ordering::Relaxed) {
             #[cfg(target_os = "android")]

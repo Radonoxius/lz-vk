@@ -2,6 +2,9 @@ use std::ffi::CStr;
 
 use ash::{Entry, vk::{ApplicationInfo, ExtensionProperties, KHR_PORTABILITY_ENUMERATION_NAME}};
 
+#[allow(unused)]
+use crate::logging::android::AndroidLogPriority;
+
 use crate::logging::log;
 
 /// Returns the name of the Application or "Unnamed" if it isnt valid UTF-8.
@@ -17,6 +20,7 @@ pub unsafe fn get_application_name<'a>(
     return if let Err(e) = name {
         log!(
             get_application_name,
+            AndroidLogPriority::Error,
             "{:?}",
             e
         );
@@ -38,7 +42,7 @@ pub unsafe fn enumerate_instance_extensions(
     };
 
     return if let Err(e) = instance_extensions {
-        log!(enumerate_instance_extensions, "{:?}", e);
+        log!(enumerate_instance_extensions, AndroidLogPriority::Error, "{:?}", e);
         Vec::new()
     } else {
         unsafe {
@@ -57,7 +61,7 @@ pub fn is_portability_enumeration_supported(
             .extension_name_as_c_str();
 
         if let Err(e) = instance_extension_name {
-            log!(is_portability_enumeration_supported, "{:?}", e);
+            log!(is_portability_enumeration_supported, AndroidLogPriority::Error, "{:?}", e);
             return false;
         } else {
             if unsafe { instance_extension_name.unwrap_unchecked() } == KHR_PORTABILITY_ENUMERATION_NAME {

@@ -1,6 +1,9 @@
 use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME, PhysicalDevice, PhysicalDeviceProperties2, PhysicalDeviceType, QueueFamilyProperties2, api_version_major, api_version_minor}};
 
-use crate::{LAYER_KHRONOS_VALIDATION_NAME, logging::log, init_utils::get_application_name};
+#[allow(unused)]
+use crate::logging::android::AndroidLogPriority;
+
+use crate::{LAYER_KHRONOS_VALIDATION_NAME, init_utils::get_application_name, logging::log};
 
 /// Initializes a Vulkan instance based on the given parameters
 /// 
@@ -44,6 +47,7 @@ pub unsafe fn init(
     if let Err(e) = instance {
         log!(
             init,
+            AndroidLogPriority::Error,
             "[AppName: {}]: {:?}",
             applicaion_name,
             e
@@ -51,6 +55,7 @@ pub unsafe fn init(
     } else {
         log!(
             init,
+            AndroidLogPriority::Info,
             "[AppName: {}]: enable_debug_validation: {}, enbale_portability_enumeration: {}",
             applicaion_name,
             enable_debug_validation,
@@ -80,6 +85,7 @@ pub fn get_supported_gpus(
     if let Err(e) = all_physical_devices {
         log!(
             get_supported_gpus,
+            AndroidLogPriority::Error,
             "{:?}",
             e
         );
@@ -118,7 +124,7 @@ pub fn get_supported_gpus(
                             );
                         }
 
-                        todo!()
+                        true
                     } else {
                         false
                     }
