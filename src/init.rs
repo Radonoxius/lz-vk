@@ -1,5 +1,3 @@
-use std::mem::MaybeUninit;
-
 use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME, PhysicalDevice, PhysicalDeviceProperties2, PhysicalDeviceType, api_version_major, api_version_minor}};
 
 use crate::{LAYER_KHRONOS_VALIDATION_NAME, logging::log, init_utils::get_application_name};
