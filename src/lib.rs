@@ -12,6 +12,7 @@ pub mod qualcomm;
 pub mod nvidia;
 
 pub mod logging;
+pub mod utils;
 pub mod init_utils;
 pub mod init;
 
