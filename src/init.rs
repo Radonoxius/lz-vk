@@ -103,11 +103,6 @@ pub fn get_supported_gpus(
             })
             .collect();
 
-        log!(
-            get_supported_gpus,
-            "{:?}",
-            supported_gpus
-        );
         Ok(supported_gpus)
     }
 }
