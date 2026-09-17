@@ -14,56 +14,53 @@ pub unsafe fn init(
     enable_debug_validation: bool,
     enbale_portability_enumeration: bool
 ) -> VkResult<Instance> {
-    let instance_info;
+    let mut instance_info = InstanceCreateInfo::default();
     let applicaion_name = unsafe { get_application_name(app_info) };
 
     let enabled_layers = [LAYER_KHRONOS_VALIDATION_NAME.as_ptr()];
     let enabled_instance_extensions = [KHR_PORTABILITY_ENUMERATION_NAME.as_ptr()];
     
-    if enable_debug_validation && enbale_portability_enumeration {
-        instance_info = InstanceCreateInfo::default()
+    if enable_debug_validation {
+        instance_info = instance_info.enabled_layer_names(&enabled_layers);
+    }
+    if enbale_portability_enumeration {
+        instance_info = instance_info
             .flags(InstanceCreateFlags::ENUMERATE_PORTABILITY_KHR)
-            .application_info(app_info)
-            .enabled_layer_names(&enabled_layers)
             .enabled_extension_names(&enabled_instance_extensions);
-    } else if enable_debug_validation && !enbale_portability_enumeration {
-        instance_info = InstanceCreateInfo::default()
-            .application_info(app_info)
-            .enabled_layer_names(&enabled_layers)
-    } else if !enable_debug_validation && enbale_portability_enumeration {
-        instance_info = InstanceCreateInfo::default()
-            .flags(InstanceCreateFlags::ENUMERATE_PORTABILITY_KHR)
-            .application_info(app_info)
-            .enabled_extension_names(&enabled_instance_extensions);
-    } else {
-        instance_info = InstanceCreateInfo::default()
-            .application_info(app_info);
     }
     
     let instance = unsafe {
         entry.create_instance(&instance_info, None)
     };
 
-    if let Err(e) = instance {
-        log!(
+    match instance {
+        Err(e) => log!(
             init,
             AndroidLogPriority::Error,
             "[AppName: {}]: {:?}",
             applicaion_name,
             e
-        );
-    } else {
-        log!(
+        ),
+        _ => log!(
             init,
             AndroidLogPriority::Info,
             "[AppName: {}]: enable_debug_validation: {}, enbale_portability_enumeration: {}",
             applicaion_name,
             enable_debug_validation,
             enbale_portability_enumeration
-        );
+        )
     }
 
     instance
+}
+
+/// Returns `true` if the given device Vulkan API version
+/// is compatible with `lz-vk`
+fn is_vulkan_baseline_compatible(
+    device_properties2: PhysicalDeviceProperties2
+) -> bool {
+    api_version_major(device_properties2.properties.api_version) >= LZVK_BASELINE_MAJOR &&
+    api_version_minor(device_properties2.properties.api_version) >= LZVK_BASELINE_MINOR
 }
 
 /// Returns `true` if the given device is a GPU
@@ -119,51 +116,48 @@ pub fn get_supported_gpus(
 ) -> VkResult<Vec<PhysicalDevice>> {
     let all_physical_devices = unsafe { instance.enumerate_physical_devices() };
 
-    if let Err(e) = all_physical_devices {
-        log!(
-            get_supported_gpus,
-            AndroidLogPriority::Error,
-            "{:?}",
-            e
-        );
-        Err(e)
-    } else {
-        // Safe to do since we already checked for error
-        let all_physical_devices = unsafe { all_physical_devices.unwrap_unchecked() };
+    match all_physical_devices {
+        Err(e) => {
+            log!(
+                get_supported_gpus,
+                AndroidLogPriority::Error,
+                "{:?}",
+                e
+            );
+            Err(e)
+        },
+        Ok(all_physical_devices) => {
+            let supported_gpus = all_physical_devices.into_iter()
+                .filter(|physical_device| {
+                    let mut device_properties2 = PhysicalDeviceProperties2::default();
 
-        let supported_gpus = all_physical_devices.into_iter()
-            .filter(|physical_device| {
-                let mut device_properties2 = PhysicalDeviceProperties2::default();
+                    unsafe {
+                        instance
+                            .get_physical_device_properties2(
+                                *physical_device,
+                                &mut device_properties2
+                            )
+                    };
 
-                unsafe {
-                    instance
-                        .get_physical_device_properties2(
-                            *physical_device,
-                            &mut device_properties2
-                        )
-                };
-                
-                if
-                    api_version_major(device_properties2.properties.api_version) >= LZVK_BASELINE_MAJOR &&
-                    api_version_minor(device_properties2.properties.api_version) >= LZVK_BASELINE_MINOR
-                {
-                    if
-                        is_gpu(device_properties2) &&
-                        is_compute_queue_supported(instance, physical_device)
-                    {
-                        log!(get_supported_gpus, AndroidLogPriority::Info, "true");
-                        true
+                    if is_vulkan_baseline_compatible(device_properties2) {
+                        if
+                            is_gpu(device_properties2) &&
+                            is_compute_queue_supported(instance, physical_device)
+                        {
+                            log!(get_supported_gpus, AndroidLogPriority::Info, "true");
+                            true
+                        } else {
+                            log!(get_supported_gpus, "false");
+                            false
+                        }
                     } else {
                         log!(get_supported_gpus, "false");
                         false
                     }
-                } else {
-                    log!(get_supported_gpus, "false");
-                    false
-                }
-            })
-            .collect();
+                })
+                .collect();
 
-        Ok(supported_gpus)
+            Ok(supported_gpus)
+        }
     }
 }

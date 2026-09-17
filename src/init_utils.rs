@@ -29,14 +29,12 @@ pub unsafe fn get_instance_extensions(
         entry.enumerate_instance_extension_properties(None)
     };
 
-    if let Err(e) = instance_extensions {
-        log!(enumerate_instance_extensions, AndroidLogPriority::Error, "{:?}", e);
-        Err(e)
-    } else {
-        // Safe to do since we already checked for error
-        unsafe {
-            Ok(instance_extensions.unwrap_unchecked())
-        }
+    match instance_extensions {
+        Err(e) => {
+            log!(enumerate_instance_extensions, AndroidLogPriority::Error, "{:?}", e);
+            Err(e)
+        },
+        Ok(instance_extensions) => Ok(instance_extensions)
     }
 }
 
@@ -49,13 +47,13 @@ pub fn is_portability_enumeration_supported(
         let instance_extension_name = instance_extension
             .extension_name_as_c_str();
 
-        if let Err(e) = instance_extension_name {
-            log!(is_portability_enumeration_supported, AndroidLogPriority::Error, "{:?}", e);
-            return false;
-        } else {
-            // Safe to do since we already checked for error
-            if unsafe { instance_extension_name.unwrap_unchecked() } == KHR_PORTABILITY_ENUMERATION_NAME {
-                return true;
+        match instance_extension_name {
+            Err(e) => {
+                log!(is_portability_enumeration_supported, AndroidLogPriority::Error, "{:?}", e);
+                return false;
+            },
+            Ok(instance_extension_name) => {
+                return instance_extension_name == KHR_PORTABILITY_ENUMERATION_NAME
             }
         }
     }
@@ -73,23 +71,24 @@ pub fn get_gpu_extension_names(
         instance.enumerate_device_extension_properties(*selected_gpu)
     };
 
-    if let Err(e) = gpu_extensions {
-        log!(get_gpu_extension_names, AndroidLogPriority::Error, "{:?}", e);
-        Err(e)
-    } else {
-        // Safe to do since we already checked for error
-        let gpu_extensions = unsafe { gpu_extensions.unwrap_unchecked() };
-        let mut extension_names = Vec::new();
+    match gpu_extensions {
+        Err(e) => {
+            log!(get_gpu_extension_names, AndroidLogPriority::Error, "{:?}", e);
+            Err(e)
+        },
+        Ok(gpu_extensions) => {
+            let mut extension_names = Vec::new();
 
-        for extension in gpu_extensions {
-            extension_names.push(
-                // Safe to do since it is infallible
-                unsafe {
-                    CStr::from_ptr(&raw const extension.extension_name[0]).to_str().unwrap_unchecked().to_string()
-                }
-            );
+            for extension in gpu_extensions {
+                extension_names.push(
+                    // Safe to do since it is infallible
+                    unsafe {
+                        CStr::from_ptr(&raw const extension.extension_name[0]).to_str().unwrap_unchecked().to_string()
+                    }
+                );
+            }
+
+            Ok(extension_names)
         }
-
-        Ok(extension_names)
     }
 }
