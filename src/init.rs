@@ -1,7 +1,9 @@
-use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME, PhysicalDevice, PhysicalDeviceProperties2, PhysicalDeviceType, api_version_major, api_version_minor}};
+use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME, PhysicalDevice, PhysicalDeviceProperties2, PhysicalDeviceType, QueueFamilyProperties2, api_version_major, api_version_minor}};
 
 use crate::{LAYER_KHRONOS_VALIDATION_NAME, logging::log, init_utils::get_application_name};
 
+/// Initializes a Vulkan instance based on the given parameters
+/// 
 /// SAFETY: `app_info.p_application_name` must be null terminated!
 pub unsafe fn init(
     entry: &Entry,
@@ -59,6 +61,17 @@ pub unsafe fn init(
     instance
 }
 
+fn is_gpu(device_properties2: PhysicalDeviceProperties2) -> bool {
+    match device_properties2.properties.device_type {
+        PhysicalDeviceType::DISCRETE_GPU | PhysicalDeviceType::INTEGRATED_GPU => true,
+        _ => {
+            log!(is_gpu, "false");
+            false
+        }
+    }
+}
+
+/// Returns a list of GPUs that are `lz-vk` compatible
 pub fn get_supported_gpus(
     instance: &Instance
 ) -> VkResult<Vec<PhysicalDevice>> {
@@ -76,7 +89,7 @@ pub fn get_supported_gpus(
 
         let supported_gpus = all_physical_devices.into_iter()
             .filter(|physical_device| {
-                let mut device_properties2: PhysicalDeviceProperties2 = PhysicalDeviceProperties2::default();
+                let mut device_properties2 = PhysicalDeviceProperties2::default();
 
                 unsafe {
                     instance
@@ -90,9 +103,24 @@ pub fn get_supported_gpus(
                     api_version_major(device_properties2.properties.api_version) >= 1 &&
                     api_version_minor(device_properties2.properties.api_version) >= 1
                 {
-                    match device_properties2.properties.device_type {
-                        PhysicalDeviceType::DISCRETE_GPU | PhysicalDeviceType::INTEGRATED_GPU => true,
-                        _ => false
+                    if is_gpu(device_properties2) {
+                        let mut queue_family_properties2 = Vec::with_capacity(
+                            unsafe { instance.get_physical_device_queue_family_properties2_len(*physical_device) }
+                        );
+                        for i in 0..queue_family_properties2.capacity() {
+                            queue_family_properties2[i] = QueueFamilyProperties2::default();
+                        }
+
+                        unsafe {
+                            instance.get_physical_device_queue_family_properties2(
+                                *physical_device,
+                                &mut queue_family_properties2
+                            );
+                        }
+
+                        todo!()
+                    } else {
+                        false
                     }
                 } else {
                     false

@@ -13,19 +13,22 @@ pub fn stop_debug_region() {
     DEBUG_LOGS.store(false, SeqCst);
 }
 
-#[cfg(target_os = "android")]
 pub mod android {
-    use std::{ffi::{CStr, c_char}, sync::atomic::Ordering::Relaxed};
+    use std::ffi::CStr;
 
+    #[cfg(target_os = "android")]
+    use std::{ffi::c_char, sync::atomic::Ordering::Relaxed};
+    #[cfg(target_os = "android")]
     use crate::DEBUG_LOGS;
 
     /// Represents the log tag of this library in Android logs
     pub const LOG_TAG: &CStr = c"lz-vk";
 
     /// Represents the ID of the `LOG_ID_MAIN` log buffer in Android
-    const LOG_ID_MAIN: i32 = 0;
+    #[allow(unused)]
+    pub const LOG_ID_MAIN: i32 = 0;
 
-    /// Represents the priority of the log in Android logs
+    /// Represents the priority of the Andoird log
     #[allow(unused)]
     pub(crate) enum AndroidLogPriority {
         Unknown,
@@ -59,6 +62,7 @@ pub mod android {
     /// Safe for multi-threaded use
     ///
     /// SAFETY: Make sure that the log message size is less than 4KB!
+    #[cfg(target_os = "android")]
     pub(crate) unsafe fn android_log(priority: AndroidLogPriority, function_name: &str, message: &str) {
         if DEBUG_LOGS.load(Relaxed) {
             unsafe {
@@ -74,6 +78,7 @@ pub mod android {
         }
     }
 
+    #[cfg(target_os = "android")]
     unsafe extern "C" {
         fn __android_log_buf_write(
             log_id: i32,
@@ -84,44 +89,53 @@ pub mod android {
     }
 }
 
-/// Generic logging macro
-/// that prints the log to `stdout`.
-/// 
+/// Generic logging macro that prints the log to `stdout`.
 /// Additionally, on Android this logs to the `LOG_ID_MAIN` Log buffer as well.
-/// 
-/// The first argument is the function name (identifier) and the second is
-/// the message string literal. Also supports format! semantics and additional args.
 /// 
 /// Safe for multi-threaded use
 /// 
 /// SAFETY: Make sure that the log message size is less than 4KB!
+/// 
+/// ## Examples
+/// ```rust
+/// use crate::logging::android::AndroidLogPriority::Info;
+/// 
+/// fn abcd() {
+///     log!(abcd, "Hello!");
+///     log!(abcd, "{}, {}", "Hello", "World!");
+/// 
+///     // Advanced logging for Android
+///     log!(abcd, Info, "Hello!");
+///     log!(abcd, Info, "{}, {}", "Hello", "World!");
+/// }
+/// ```
 macro_rules! log {
-    ($function_name:ident, $message:literal) => {
+    ($function_name:ident, $fmt:literal $(, $($arg:tt)*)?) => {
         if crate::DEBUG_LOGS.load(std::sync::atomic::Ordering::Relaxed) {
             #[cfg(target_os = "android")]
             unsafe {
                 crate::logging::android::android_log(
                     crate::logging::android::AndroidLogPriority::Info,
                     stringify!($function_name),
-                    $message
+                    &format!($fmt $(, $($arg)*)?)
                 );
             }
 
-            println!("[{}]: {}", stringify!($function_name), $message);
+            println!("[{}]: {}", stringify!($function_name), format!($fmt $(, $($arg)*)?));
         }
     };
-    ($function_name:ident, $fmt:literal, $($arg:tt)*) => {
+    ($function_name:ident, $android_prio:path, $fmt:literal $(, $($arg:tt)*)?) => {
         if crate::DEBUG_LOGS.load(std::sync::atomic::Ordering::Relaxed) {
             #[cfg(target_os = "android")]
             unsafe {
                 crate::logging::android::android_log(
-                    crate::logging::android::AndroidLogPriority::Info,
+                    $android_prio,
                     stringify!($function_name),
-                    &format!($fmt, $($arg)*)
+                    &format!($fmt $(, $($arg)*)?)
                 );
             }
 
-            println!("[{}]: {}", stringify!($function_name), format!($fmt, $($arg)*));
+            println!("[{}]: {}", stringify!($function_name), format!($fmt $(, $($arg)*)?));
         }
     };
 }
