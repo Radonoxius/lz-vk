@@ -7,7 +7,7 @@ use crate::{LAYER_KHRONOS_VALIDATION_NAME, LZVK_BASELINE_MAJOR, LZVK_BASELINE_MI
 
 /// Initializes a Vulkan instance based on the given parameters
 /// 
-/// SAFETY: `app_info.p_application_name` must be null terminated!
+/// SAFETY: `entry` must be valid & `app_info.p_application_name` must be null terminated & valid UTF-8!
 pub unsafe fn init(
     entry: &Entry,
     app_info: &ApplicationInfo,
@@ -100,6 +100,7 @@ fn is_compute_queue_supported(
         );
     }
 
+    // Here size equals capacity
     for i in 0..queue_family_properties2.capacity() {
         if
             queue_family_properties2[i].queue_family_properties.queue_flags & QueueFlags::COMPUTE == QueueFlags::COMPUTE &&
@@ -127,6 +128,7 @@ pub fn get_supported_gpus(
         );
         Err(e)
     } else {
+        // Safe to do since we already checked for error
         let all_physical_devices = unsafe { all_physical_devices.unwrap_unchecked() };
 
         let supported_gpus = all_physical_devices.into_iter()

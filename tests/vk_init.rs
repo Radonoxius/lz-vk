@@ -1,5 +1,5 @@
 use ash::Entry;
-use lz_vk::{init::init, logging::{start_debug_region, stop_debug_region}, init_utils::{enumerate_instance_extensions, is_portability_enumeration_supported}};
+use lz_vk::{init::init, logging::{start_debug_region, stop_debug_region}, init_utils::{get_instance_extensions, is_portability_enumeration_supported}};
 use test_utils::test_info;
 
 // Test `init` with Khronos Validation Layer enabled.
@@ -15,7 +15,7 @@ fn init_test() {
 
     start_debug_region();
 
-    let instance_extensions = unsafe { enumerate_instance_extensions(&entry) };
+    let instance_extensions = unsafe { get_instance_extensions(&entry) }.unwrap();
     let instance = unsafe {
         init(
             &entry,
@@ -41,7 +41,7 @@ fn init_test_no_validation() {
 
     start_debug_region();
 
-    let instance_extensions = unsafe { enumerate_instance_extensions(&entry) };
+    let instance_extensions = unsafe { get_instance_extensions(&entry) }.unwrap();
     let instance = unsafe {
         init(
             &entry,

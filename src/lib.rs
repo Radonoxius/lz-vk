@@ -25,11 +25,6 @@ pub(crate) const LZVK_BASELINE_MINOR: u32 = api_version_minor(LZVK_BASELINE_VULK
 
 pub(crate) const LAYER_KHRONOS_VALIDATION_NAME: &CStr = c"VK_LAYER_KHRONOS_validation";
 
-/// The INVALID string value.
-/// 
-/// Usually returned if a certain string is invalid
-pub const INVALID: &str = "INVALID";
-
 /// Specifies whether debug logs are enabled.
 ///
 /// Disabled by default
