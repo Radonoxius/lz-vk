@@ -101,7 +101,8 @@ pub mod android {
 /// ## Examples
 /// ```rust
 /// #[allow(unused)]
-/// use crate::logging::android::AndroidLogPriority;
+/// use lz_vk::logging::android::AndroidLogPriority;
+/// use lz_vk::logging::log;
 /// 
 /// fn abcd() {
 ///     // Default Android Log priority is `AndroidLogPriority::Warn`
