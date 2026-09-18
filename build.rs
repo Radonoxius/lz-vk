@@ -20,7 +20,7 @@ fn main() {
                 "linux-x86_64"
             };
 
-        if android_ndk_home == "" {
+        if android_ndk_home.is_empty() {
             panic!("ANDROID_NDK_HOME env-variable is undefined!");
         } else if android_ndk_home.ends_with("/") {
             android_ndk_home.pop();

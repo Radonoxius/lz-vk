@@ -44,7 +44,7 @@ pub mod android {
 
     impl Into<i32> for AndroidLogPriority {
         fn into(self) -> i32 {
-            return match self {
+            match self {
                 Self::Unknown => 0,
                 Self::Default => 1,
                 Self::Verbose => 2,

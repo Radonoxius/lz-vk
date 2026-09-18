@@ -67,10 +67,10 @@ fn is_vulkan_baseline_compatible(
 fn is_gpu(
     device_properties2: PhysicalDeviceProperties2
 ) -> bool {
-    match device_properties2.properties.device_type {
-        PhysicalDeviceType::DISCRETE_GPU | PhysicalDeviceType::INTEGRATED_GPU => true,
-        _ => false
-    }
+    matches!(
+        device_properties2.properties.device_type,
+        PhysicalDeviceType::DISCRETE_GPU | PhysicalDeviceType::INTEGRATED_GPU
+    )
 }
 
 /// Returns `true` if the given device supports Compute queues/stages

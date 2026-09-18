@@ -41,20 +41,19 @@ pub unsafe fn get_instance_extensions(
 /// Finds if `VK_KHR_portability_enumeration` Instance extension is supported.
 /// Useful to query support for Non-Conformant drivers & MoltenVK
 pub fn is_portability_enumeration_supported(
-    instance_extensions: &Vec<ExtensionProperties>
+    instance_extensions: &[ExtensionProperties]
 ) -> bool {
     for instance_extension in instance_extensions {
         let instance_extension_name = instance_extension
             .extension_name_as_c_str();
 
         match instance_extension_name {
-            Err(e) => {
-                log!(is_portability_enumeration_supported, AndroidLogPriority::Error, "{:?}", e);
-                return false;
-            },
-            Ok(instance_extension_name) => {
-                return instance_extension_name == KHR_PORTABILITY_ENUMERATION_NAME
-            }
+            Err(e) =>
+                log!(is_portability_enumeration_supported, AndroidLogPriority::Error, "{:?}", e),
+            Ok(instance_extension_name) =>
+                if instance_extension_name == KHR_PORTABILITY_ENUMERATION_NAME {
+                    return true;
+                }
         }
     }
 
