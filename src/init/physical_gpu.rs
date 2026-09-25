@@ -1,58 +1,12 @@
-use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME, PhysicalDevice, PhysicalDeviceProperties2, PhysicalDeviceType, QueueFamilyProperties2, QueueFlags, api_version_major, api_version_minor}};
+use std::ffi::CStr;
+
+use ash::{Instance, prelude::VkResult, vk::{PhysicalDevice, PhysicalDeviceProperties2, PhysicalDeviceType, QueueFamilyProperties2, QueueFlags, api_version_major, api_version_minor}};
 
 #[allow(unused)]
 use crate::logging::android::AndroidLogPriority;
 
-use crate::{LAYER_KHRONOS_VALIDATION_NAME, LZVK_BASELINE_MAJOR, LZVK_BASELINE_MINOR, init_utils::get_application_name, logging::log};
+use crate::{LZVK_BASELINE_MAJOR, LZVK_BASELINE_MINOR, logging::log};
 
-/// Initializes a Vulkan instance based on the given parameters
-/// 
-/// SAFETY: `entry` must be valid & `app_info.p_application_name` must be null terminated & valid UTF-8!
-pub unsafe fn init(
-    entry: &Entry,
-    app_info: &ApplicationInfo,
-    enable_debug_validation: bool,
-    enbale_portability_enumeration: bool
-) -> VkResult<Instance> {
-    let mut instance_info = InstanceCreateInfo::default();
-    let applicaion_name = unsafe { get_application_name(app_info) };
-
-    let enabled_layers = [LAYER_KHRONOS_VALIDATION_NAME.as_ptr()];
-    let enabled_instance_extensions = [KHR_PORTABILITY_ENUMERATION_NAME.as_ptr()];
-    
-    if enable_debug_validation {
-        instance_info = instance_info.enabled_layer_names(&enabled_layers);
-    }
-    if enbale_portability_enumeration {
-        instance_info = instance_info
-            .flags(InstanceCreateFlags::ENUMERATE_PORTABILITY_KHR)
-            .enabled_extension_names(&enabled_instance_extensions);
-    }
-    
-    let instance = unsafe {
-        entry.create_instance(&instance_info, None)
-    };
-
-    match instance {
-        Err(e) => log!(
-            init,
-            AndroidLogPriority::Error,
-            "[AppName: {}]: {:?}",
-            applicaion_name,
-            e
-        ),
-        _ => log!(
-            init,
-            AndroidLogPriority::Info,
-            "[AppName: {}]: enable_debug_validation: {}, enbale_portability_enumeration: {}",
-            applicaion_name,
-            enable_debug_validation,
-            enbale_portability_enumeration
-        )
-    }
-
-    instance
-}
 
 /// Returns `true` if the given device Vulkan API version
 /// is compatible with `lz-vk`
@@ -111,7 +65,7 @@ fn is_compute_queue_supported(
 }
 
 /// Returns a list of GPUs that are `lz-vk` compatible
-pub fn get_supported_gpus(
+pub fn get_supported_physical_gpus(
     instance: &Instance
 ) -> VkResult<Vec<PhysicalDevice>> {
     let all_physical_devices = unsafe { instance.enumerate_physical_devices() };
@@ -158,6 +112,37 @@ pub fn get_supported_gpus(
                 .collect();
 
             Ok(supported_gpus)
+        }
+    }
+}
+
+/// Returns the names of all extensions supported by the GPU
+pub fn get_gpu_extension_names(
+    instance: &Instance,
+    selected_gpu: &PhysicalDevice
+) -> VkResult<Vec<String>> {
+    let gpu_extensions = unsafe {
+        instance.enumerate_device_extension_properties(*selected_gpu)
+    };
+
+    match gpu_extensions {
+        Err(e) => {
+            log!(get_gpu_extension_names, AndroidLogPriority::Error, "{:?}", e);
+            Err(e)
+        },
+        Ok(gpu_extensions) => {
+            let mut extension_names = Vec::new();
+
+            for extension in gpu_extensions {
+                extension_names.push(
+                    // Safe to do since it is infallible
+                    unsafe {
+                        CStr::from_ptr(&raw const extension.extension_name[0]).to_str().unwrap_unchecked().to_string()
+                    }
+                );
+            }
+
+            Ok(extension_names)
         }
     }
 }

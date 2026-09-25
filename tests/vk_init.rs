@@ -1,5 +1,5 @@
 use ash::Entry;
-use lz_vk::{init::init, logging::{start_debug_region, stop_debug_region}, init_utils::{get_instance_extensions, is_portability_enumeration_supported}};
+use lz_vk::{init::instance::{get_instance_extensions, is_portability_enumeration_supported, init}, logging::{start_debug_region, stop_debug_region}};
 use test_utils::test_info;
 
 // Test `init` with Khronos Validation Layer enabled.

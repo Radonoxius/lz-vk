@@ -1,7 +1,7 @@
 use std::ptr::null;
 
 use ash::Entry;
-use lz_vk::{init::{get_supported_gpus, init}, init_utils::{get_instance_extensions, is_portability_enumeration_supported}, logging::{start_debug_region, stop_debug_region}, utils::get_logical_gpu};
+use lz_vk::{init::{instance::{get_instance_extensions, is_portability_enumeration_supported, init}, logical_gpu::create_logical_gpu, physical_gpu::get_supported_physical_gpus}, logging::{start_debug_region, stop_debug_region}};
 use test_utils::test_info;
 
 // Test `init` with Khronos Validation Layer disabled.
@@ -23,11 +23,11 @@ fn init_gpu_test() {
         )
     }.unwrap();
 
-    let physical_gpus = get_supported_gpus(&instance)
+    let physical_gpus = get_supported_physical_gpus(&instance)
         .unwrap();
 
     let _gpu = unsafe {
-        get_logical_gpu(
+        create_logical_gpu(
             &instance,
             &physical_gpus[0],
             &[null()],

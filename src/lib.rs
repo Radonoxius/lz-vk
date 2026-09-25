@@ -3,17 +3,10 @@ use std::{ffi::CStr, sync::atomic::AtomicBool};
 use ash::vk::{API_VERSION_1_1, api_version_major, api_version_minor};
 
 pub mod compression;
-
-#[cfg(feature = "arm")]
-pub mod arm;
-#[cfg(feature = "qualcomm")]
-pub mod qualcomm;
-#[cfg(feature = "nvidia")]
-pub mod nvidia;
+pub mod decompression;
 
 pub mod logging;
 pub mod utils;
-pub mod init_utils;
 pub mod init;
 
 /// Represents the baseline Vulkan API version required by `lz-vk`

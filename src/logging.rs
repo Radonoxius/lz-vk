@@ -61,7 +61,8 @@ pub mod android {
     /// Logs to the `LOG_ID_MAIN` Android Log buffer.
     /// Safe for multi-threaded use
     ///
-    /// SAFETY: Make sure that the log message size is less than 4KB!
+    /// # Safety
+    /// Make sure that the log message size is less than 4KB!
     #[cfg(target_os = "android")]
     pub(crate) unsafe fn android_log(priority: AndroidLogPriority, function_name: &str, message: &str) {
         if DEBUG_LOGS.load(Relaxed) {
@@ -96,9 +97,10 @@ pub mod android {
 /// 
 /// Safe for multi-threaded use.
 /// 
-/// SAFETY: Make sure that the log message size is less than 4KB!
+/// # Safety
+/// Make sure that the log message size is less than 4KB!
 /// 
-/// ## Examples
+/// # Examples
 /// ```rust,ignore
 /// #[allow(unused)]
 /// use crate::logging::android::AndroidLogPriority;
