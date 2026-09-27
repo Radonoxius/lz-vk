@@ -1,13 +1,21 @@
-use std::ffi::CStr;
-
-use ash::vk::ApplicationInfo;
-use lz_vk::LZVK_BASELINE_VULKAN_API_VERSION;
-
+#[macro_export]
 /// Simplifies the creation of test info
-pub fn test_info(name: &'_ CStr) -> ApplicationInfo<'_> {
-    ApplicationInfo {
-        api_version: LZVK_BASELINE_VULKAN_API_VERSION,
-        p_application_name: name.as_ptr(),
-        ..Default::default()
+macro_rules! test_info {
+    ($name:ident) => {
+        lz_vk::init::instance::create_application_info(
+            std::ffi::CStr::from_bytes_with_nul(
+                std::concat!("lz-vk:", std::stringify!($name), "\0").as_bytes()
+            )
+            .unwrap()
+        )
+    };
+}
+
+/// Returns true if the host system is running Android
+pub fn is_android_host() -> bool {
+    if cfg!(target_os = "android") {
+        true
+    } else {
+        false
     }
 }

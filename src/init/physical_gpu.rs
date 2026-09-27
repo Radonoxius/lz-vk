@@ -7,11 +7,10 @@ use crate::logging::android::AndroidLogPriority;
 
 use crate::{LZVK_BASELINE_MAJOR, LZVK_BASELINE_MINOR, logging::log};
 
-
 /// Returns `true` if the given device Vulkan API version
 /// is compatible with `lz-vk`
 fn is_vulkan_baseline_compatible(
-    device_properties2: PhysicalDeviceProperties2
+    device_properties2: &PhysicalDeviceProperties2
 ) -> bool {
     api_version_major(device_properties2.properties.api_version) >= LZVK_BASELINE_MAJOR &&
     api_version_minor(device_properties2.properties.api_version) >= LZVK_BASELINE_MINOR
@@ -19,7 +18,7 @@ fn is_vulkan_baseline_compatible(
 
 /// Returns `true` if the given device is a GPU
 fn is_gpu(
-    device_properties2: PhysicalDeviceProperties2
+    device_properties2: &PhysicalDeviceProperties2
 ) -> bool {
     matches!(
         device_properties2.properties.device_type,
@@ -52,10 +51,10 @@ fn is_compute_queue_supported(
     }
 
     // Here size equals capacity
-    for i in 0..queue_family_properties2.capacity() {
+    for queue_family_property in queue_family_properties2 {
         if
-            queue_family_properties2[i].queue_family_properties.queue_flags & QueueFlags::COMPUTE == QueueFlags::COMPUTE &&
-            queue_family_properties2[i].queue_family_properties.queue_count >= 1
+            queue_family_property.queue_family_properties.queue_flags & QueueFlags::COMPUTE == QueueFlags::COMPUTE &&
+            queue_family_property.queue_family_properties.queue_count >= 1
         {
             return true;
         }
@@ -64,7 +63,7 @@ fn is_compute_queue_supported(
     false
 }
 
-/// Returns a list of GPUs that are `lz-vk` compatible
+/// Returns a list of Physical GPUs that are `lz-vk` compatible
 pub fn get_supported_physical_gpus(
     instance: &Instance
 ) -> VkResult<Vec<PhysicalDevice>> {
@@ -73,7 +72,7 @@ pub fn get_supported_physical_gpus(
     match all_physical_devices {
         Err(e) => {
             log!(
-                get_supported_gpus,
+                get_supported_physical_gpus,
                 AndroidLogPriority::Error,
                 "{:?}",
                 e
@@ -93,19 +92,19 @@ pub fn get_supported_physical_gpus(
                             )
                     };
 
-                    if is_vulkan_baseline_compatible(device_properties2) {
+                    if is_vulkan_baseline_compatible(&device_properties2) {
                         if
-                            is_gpu(device_properties2) &&
+                            is_gpu(&device_properties2) &&
                             is_compute_queue_supported(instance, physical_device)
                         {
-                            log!(get_supported_gpus, AndroidLogPriority::Info, "true");
+                            log!(get_supported_physical_gpus, AndroidLogPriority::Info, "true");
                             true
                         } else {
-                            log!(get_supported_gpus, "false");
+                            log!(get_supported_physical_gpus, "false");
                             false
                         }
                     } else {
-                        log!(get_supported_gpus, "false");
+                        log!(get_supported_physical_gpus, "false");
                         false
                     }
                 })

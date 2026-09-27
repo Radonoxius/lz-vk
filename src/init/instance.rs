@@ -1,46 +1,79 @@
-use std::ffi::CStr;
+use std::{ffi::CStr, str::Utf8Error};
 
-use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, ExtensionProperties, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME}};
+use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, ExtensionProperties, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME, LayerProperties}};
 
 #[allow(unused)]
 use crate::logging::android::AndroidLogPriority;
 
-use crate::{LAYER_KHRONOS_VALIDATION_NAME, logging::log};
+use crate::{LAYER_KHRONOS_VALIDATION_NAME, LZVK_BASELINE_VULKAN_API_VERSION, logging::log};
+
+/// Helper to create minimal `ApplicationInfo`
+pub fn create_application_info(name: &'_ CStr) -> ApplicationInfo<'_> {
+    ApplicationInfo {
+        api_version: LZVK_BASELINE_VULKAN_API_VERSION,
+        p_application_name: name.as_ptr(),
+        ..Default::default()
+    }
+}
 
 /// Returns the name of the Application.
 /// 
 /// # Safety
-/// `app_info.p_application_name` must be null terminated & valid UTF-8!
+/// `app_info.p_application_name` must not be a nullptr!
+/// The app name should be null terminated!
 pub unsafe fn get_application_name<'a>(
     app_info: &ApplicationInfo<'a>
-) -> &'a str {
-    unsafe {
-        CStr::from_ptr(app_info.p_application_name).to_str().unwrap_unchecked()
+) -> Result<&'a str, Utf8Error> {
+    let application_name = unsafe { CStr::from_ptr(app_info.p_application_name) }
+        .to_str();
+
+    match application_name {
+        Err(e) => {
+            log!(get_application_name, AndroidLogPriority::Error, "{:?}", e);
+            Err(e)
+        },
+        Ok(application_name) => Ok(application_name)
     }
 }
 
 /// Enumerates all available Instance Extensions.
-/// 
-/// # Safety
-/// `entry` must be valid!
-pub unsafe fn get_instance_extensions(
+pub fn get_instance_extension_properties(
     entry: &Entry
 ) -> VkResult<Vec<ExtensionProperties>> {
+    // Safe to do since it is infallible
     let instance_extensions = unsafe {
         entry.enumerate_instance_extension_properties(None)
     };
 
     match instance_extensions {
         Err(e) => {
-            log!(enumerate_instance_extensions, AndroidLogPriority::Error, "{:?}", e);
+            log!(get_instance_extension_properties, AndroidLogPriority::Error, "{:?}", e);
             Err(e)
         },
         Ok(instance_extensions) => Ok(instance_extensions)
     }
 }
 
-/// Finds if `VK_KHR_portability_enumeration` Instance extension is supported.
-/// Useful to query support for Non-Conformant drivers & MoltenVK
+pub fn get_instance_layer_properties(
+    entry: &Entry
+) -> VkResult<Vec<LayerProperties>> {
+    // Safe to do since it is infallible
+    let instance_layers = unsafe {
+        entry.enumerate_instance_layer_properties()
+    };
+
+    match instance_layers {
+        Err(e) => {
+            log!(get_instance_layer_properties, AndroidLogPriority::Error, "{:?}", e);
+            Err(e)
+        },
+        Ok(instance_layers) => Ok(instance_layers)
+    }
+}
+
+/// Returns `true` if `VK_KHR_portability_enumeration` Instance extension is supported.
+/// 
+/// Required to support Non-Conformant drivers & MoltenVK
 pub fn is_portability_enumeration_supported(
     instance_extensions: &[ExtensionProperties]
 ) -> bool {
@@ -65,7 +98,8 @@ pub fn is_portability_enumeration_supported(
 /// Initializes a Vulkan instance based on the given parameters
 /// 
 /// # Safety
-/// `entry` must be valid & `app_info.p_application_name` must be null terminated & valid UTF-8!
+/// `app_info.p_application_name` must not be a nullptr!
+/// The app name should be null terminated & be valid UTF-8!
 pub unsafe fn init(
     entry: &Entry,
     app_info: &ApplicationInfo,
@@ -73,7 +107,7 @@ pub unsafe fn init(
     enbale_portability_enumeration: bool
 ) -> VkResult<Instance> {
     let mut instance_info = InstanceCreateInfo::default();
-    let applicaion_name = unsafe { get_application_name(app_info) };
+    let applicaion_name = unsafe { get_application_name(app_info).unwrap_or_default() };
 
     let enabled_layers = [LAYER_KHRONOS_VALIDATION_NAME.as_ptr()];
     let enabled_instance_extensions = [KHR_PORTABILITY_ENUMERATION_NAME.as_ptr()];

@@ -58,7 +58,7 @@ pub unsafe fn create_logical_gpu(
     match logical_gpu {
         Err(e) => {
             log!(
-                get_logical_gpu,
+                create_logical_gpu,
                 AndroidLogPriority::Error,
                 "{:?}",
                 e

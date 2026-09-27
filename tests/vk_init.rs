@@ -1,26 +1,25 @@
-use ash::Entry;
-use lz_vk::{init::instance::{get_instance_extensions, is_portability_enumeration_supported, init}, logging::{start_debug_region, stop_debug_region}};
-use test_utils::test_info;
+use std::ptr::null;
 
-// Test `init` with Khronos Validation Layer enabled.
+use ash::Entry;
+use lz_vk::{init::{instance::{get_instance_extension_properties, is_portability_enumeration_supported, init}, logical_gpu::create_logical_gpu, physical_gpu::get_supported_physical_gpus}, logging::{start_debug_region, stop_debug_region}};
+use test_utils::{is_android_host, test_info};
+
+// Test `init`.
 // Requires your machine to have vulkan development headers and related packages
-//
-// This test fails on Android (Termux), due to Android security policies.
-// So its ignored
 #[test]
-#[cfg_attr(target_os = "android", ignore)]
-fn init_test() {
+fn init_instance() {
     let entry = Entry::linked();
-    let app_info = test_info(c"lz-vk:init_test");
+    let app_info = test_info!(init_instance);
 
     start_debug_region();
 
-    let instance_extensions = unsafe { get_instance_extensions(&entry) }.unwrap();
+    let instance_extensions = get_instance_extension_properties(&entry).unwrap();
     let instance = unsafe {
+        // Usage of Vulkan Validation Layers isnt allowed on Android (Termux), due to Android security policies.
         init(
             &entry,
             &app_info,
-            true,
+            !is_android_host(),
             is_portability_enumeration_supported(&instance_extensions)
         )
     };
@@ -32,28 +31,41 @@ fn init_test() {
     }
 }
 
-// Test `init` with Khronos Validation Layer disabled.
+// Test `init`.
 // Requires your machine to have vulkan development headers and related packages
 #[test]
-fn init_test_no_validation() {
+fn init_physical_gpu() {
     let entry = Entry::linked();
-    let app_info = test_info(c"lz-vk:init_test_no_validation");
+    let app_info = test_info!(init_physical_gpu);
 
     start_debug_region();
 
-    let instance_extensions = unsafe { get_instance_extensions(&entry) }.unwrap();
+    let instance_extensions = get_instance_extension_properties(&entry).unwrap();
     let instance = unsafe {
+        // Usage of Vulkan Validation Layers isnt allowed on Android (Termux), due to Android security policies.
         init(
             &entry,
             &app_info,
-            false,
+            !is_android_host(),
             is_portability_enumeration_supported(&instance_extensions)
         )
-    };
+    }.unwrap();
+
+    let physical_gpus = get_supported_physical_gpus(&instance)
+        .unwrap();
+
+    let _gpu = unsafe {
+        create_logical_gpu(
+            &instance,
+            &physical_gpus[0],
+            &[null()],
+            &[0],
+            &[1],
+            &[&[1.0]],
+            null(),
+            &[]
+        )
+    }.unwrap();
 
     stop_debug_region();
-
-    if let Err(_) = instance {
-        instance.unwrap();
-    }
 }
