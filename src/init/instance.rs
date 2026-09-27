@@ -41,7 +41,7 @@ pub fn get_instance_extensions(
 
     match instance_extensions {
         Err(e) => {
-            log!(get_instance_extension_properties, AndroidLogPriority::Error, "{:?}", e);
+            log!(get_instance_extensions, AndroidLogPriority::Error, "{:?}", e);
             Err(e)
         },
         Ok(instance_extensions) => Ok(instance_extensions)
@@ -59,7 +59,7 @@ pub fn get_instance_layers(
 
     match instance_layers {
         Err(e) => {
-            log!(get_instance_layer_properties, AndroidLogPriority::Error, "{:?}", e);
+            log!(get_instance_layers, AndroidLogPriority::Error, "{:?}", e);
             Err(e)
         },
         Ok(instance_layers) => Ok(instance_layers)
