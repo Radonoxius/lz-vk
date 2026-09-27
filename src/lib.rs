@@ -1,6 +1,6 @@
 use std::ffi::CStr;
 
-use ash::vk::{API_VERSION_1_1, api_version_major, api_version_minor};
+use ash::vk::API_VERSION_1_1;
 
 pub mod compression;
 pub mod decompression;
@@ -11,10 +11,5 @@ pub mod init;
 
 /// Represents the baseline Vulkan API version required by `lz-vk`
 pub const LZVK_BASELINE_VULKAN_API_VERSION: u32 = API_VERSION_1_1;
-
-/// Represents the major of the baseline Vulkan API version required by `lz-vk`
-pub(crate) const LZVK_BASELINE_MAJOR: u32 = api_version_major(LZVK_BASELINE_VULKAN_API_VERSION);
-/// Represents the minor of the baseline Vulkan API version required by `lz-vk`
-pub(crate) const LZVK_BASELINE_MINOR: u32 = api_version_minor(LZVK_BASELINE_VULKAN_API_VERSION);
 
 pub(crate) const LAYER_KHRONOS_VALIDATION_NAME: &CStr = c"VK_LAYER_KHRONOS_validation";

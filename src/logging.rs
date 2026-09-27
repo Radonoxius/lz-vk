@@ -107,16 +107,17 @@ pub mod android {
 /// ```rust,ignore
 /// #[allow(unused)]
 /// use crate::logging::android::AndroidLogPriority;
+/// 
 /// use crate::logging::log;
 /// 
-/// fn abcd() {
+/// fn function_name() {
 ///     // Default Android Log priority is `AndroidLogPriority::Warn`
-///     log!(abcd, "Hello!");
-///     log!(abcd, "{}, {}", "Hello", "World!");
+///     log!(function_name, "Hello!");
+///     log!(function_name, "{}, {}", "Hello", "World!");
 /// 
 ///     // Advanced logging (effective on Android only)
-///     log!(abcd, AndroidLogPriority::Info, "Hello!");
-///     log!(abcd, AndroidLogPriority::Error, "{}, {}", "Hello", "World!");
+///     log!(function_name, AndroidLogPriority::Info, "Hello!");
+///     log!(function_name, AndroidLogPriority::Error, "{}, {}", "Hello", "World!");
 /// }
 /// ```
 macro_rules! log {

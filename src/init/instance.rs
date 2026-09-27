@@ -35,7 +35,6 @@ pub unsafe fn get_application_name<'a>(
 pub fn get_instance_extensions(
     entry: &Entry
 ) -> VkResult<Vec<ExtensionProperties>> {
-    // Safe to do since it is infallible
     let instance_extensions = unsafe {
         entry.enumerate_instance_extension_properties(None)
     };
@@ -94,6 +93,8 @@ pub fn is_portability_enumeration_supported(
 /// Initializes a Vulkan instance based on the given parameters
 /// 
 /// # Safety
+/// `entry` must be valid!
+///
 /// `app_info.p_application_name` must not be a nullptr!
 /// The app name should be null terminated & contain valid UTF-8!
 pub unsafe fn init(

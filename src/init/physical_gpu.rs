@@ -1,17 +1,16 @@
-use ash::{Instance, prelude::VkResult, vk::{ExtensionProperties, PhysicalDevice, PhysicalDeviceProperties2, PhysicalDeviceType, QueueFamilyProperties2, QueueFlags, api_version_major, api_version_minor}};
+use ash::{Instance, prelude::VkResult, vk::{ExtensionProperties, PhysicalDevice, PhysicalDeviceProperties2, PhysicalDeviceType, QueueFamilyProperties2, QueueFlags}};
 
 #[allow(unused)]
 use crate::logging::android::AndroidLogPriority;
 
-use crate::{LZVK_BASELINE_MAJOR, LZVK_BASELINE_MINOR, logging::log};
+use crate::{LZVK_BASELINE_VULKAN_API_VERSION, logging::log};
 
 /// Returns `true` if the given device Vulkan API version
 /// is compatible with `lz-vk`
 fn is_vulkan_baseline_compatible(
     device_properties2: &PhysicalDeviceProperties2
 ) -> bool {
-    api_version_major(device_properties2.properties.api_version) >= LZVK_BASELINE_MAJOR &&
-    api_version_minor(device_properties2.properties.api_version) >= LZVK_BASELINE_MINOR
+    device_properties2.properties.api_version >= LZVK_BASELINE_VULKAN_API_VERSION
 }
 
 /// Returns `true` if the given device is a GPU
@@ -113,6 +112,7 @@ pub fn get_supported_physical_gpus(
     }
 }
 
+/// Returns all GPU extension properties
 pub fn get_gpu_extension_properties(
     instance: &Instance,
     selected_gpu: &PhysicalDevice
