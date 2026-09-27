@@ -61,6 +61,9 @@ fn is_compute_queue_supported(
 }
 
 /// Returns a list of Physical GPUs that are `lz-vk` compatible
+/// 
+/// **NOTE**: If the provided application name isnt valid UTF-8, the default string value
+/// will be used as its name in the logs
 pub fn get_supported_physical_gpus(
     app_ctx: &ApplicationContext
 ) -> VkResult<Vec<PhysicalDevice>> {
@@ -129,6 +132,9 @@ pub fn get_supported_physical_gpus(
 }
 
 /// Returns all GPU extension properties
+/// 
+/// **NOTE**: If the provided application name isnt valid UTF-8, the default string value
+/// will be used as its name in the logs
 pub fn get_gpu_extension_properties(
     app_ctx: &ApplicationContext,
     selected_gpu: &PhysicalDevice
@@ -156,40 +162,11 @@ pub fn get_gpu_extension_properties(
 /// 
 /// Ignores the extensions whose names arent null terminated or
 /// dont contain valid UTF-8
-pub fn get_gpu_extension_names<'a>(
-    app_ctx: &ApplicationContext,
-    gpu_extensions: &'a [ExtensionProperties]
-) -> Vec<&'a str> {
+pub fn get_gpu_extension_names(
+    gpu_extensions: &[ExtensionProperties]
+) -> Vec<&str> {
     gpu_extensions
         .iter()
-        .filter_map(|ext| {
-            match ext.extension_name_as_c_str() {
-                Err(e) => {
-                    log!(
-                        get_gpu_extension_names,
-                        AndroidLogPriority::Error,
-                        "[AppName: {}]: {:?}",
-                        app_ctx.get_application_name(),
-                        e
-                    );
-                    None
-                }
-                Ok(ext_cstr) => {
-                    match ext_cstr.to_str() {
-                        Err(e) => {
-                            log!(
-                                get_gpu_extension_names,
-                                AndroidLogPriority::Error,
-                                "[AppName: {}]: {:?}",
-                                app_ctx.get_application_name(),
-                                e
-                            );
-                            None
-                        },
-                        Ok(ext_str) => Some(ext_str)
-                    }
-                }
-            }
-        })
+        .filter_map(|ext| ext.extension_name_as_c_str().ok()?.to_str().ok())
         .collect()
 }

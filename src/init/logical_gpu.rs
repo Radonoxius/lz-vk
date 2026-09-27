@@ -10,6 +10,9 @@ use crate::{init::ApplicationContext, logging::log, utils::get_raw_cstr_slice};
 
 /// Returns a logical GPU using the physical GPU provided.
 /// 
+/// **NOTE**: If the provided application name isnt valid UTF-8, the default string value
+/// will be used as its name in the logs
+/// 
 /// # Safety
 /// The `p_next` parameters must either be `nullptrs` or
 /// must be valid!
@@ -60,7 +63,8 @@ pub unsafe fn create_logical_gpu(
             log!(
                 create_logical_gpu,
                 AndroidLogPriority::Error,
-                "{:?}",
+                "[AppName: {}]: {:?}",
+                app_ctx.get_application_name(),
                 e
             );
             Err(e)

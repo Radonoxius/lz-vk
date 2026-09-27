@@ -33,6 +33,19 @@ pub fn get_instance_extensions(
     }
 }
 
+/// Returns the names of extensions supported by the instance.
+/// 
+/// Ignores the extensions whose names arent null terminated or
+/// dont contain valid UTF-8
+pub fn get_instance_extension_names(
+    instance_extension_properties: &[ExtensionProperties]
+) -> Vec<&str> {
+    instance_extension_properties
+        .iter()
+        .filter_map(|ext| ext.extension_name_as_c_str().ok()?.to_str().ok())
+        .collect()
+}
+
 /// Enumerates all available Instance Layers
 pub fn get_instance_layers(
     entry: &Entry
@@ -49,6 +62,19 @@ pub fn get_instance_layers(
         },
         Ok(instance_layers) => Ok(instance_layers)
     }
+}
+
+/// Returns the names of layers supported by the instance.
+/// 
+/// Ignores the extensions whose names arent null terminated or
+/// dont contain valid UTF-8
+pub fn get_instance_layer_names(
+    instance_layer_properties: &[LayerProperties]
+) -> Vec<&str> {
+    instance_layer_properties
+        .iter()
+        .filter_map(|layer_property| layer_property.layer_name_as_c_str().ok()?.to_str().ok())
+        .collect()
 }
 
 /// Returns `true` if `VK_KHR_portability_enumeration` Instance extension is supported.
