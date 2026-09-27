@@ -1,20 +1,20 @@
 use std::ffi::{CStr, c_void};
 
-use ash::{Device, Instance, prelude::VkResult, vk::{DeviceCreateInfo, DeviceQueueCreateInfo, PhysicalDevice}};
+use ash::{Device, prelude::VkResult, vk::{DeviceCreateInfo, DeviceQueueCreateInfo, PhysicalDevice}};
 
 #[allow(unused)]
 use crate::logging::android::AndroidLogPriority;
 
-use crate::{logging::log, utils::get_raw_cstr_slice};
+use crate::{init::ApplicationContext, logging::log, utils::get_raw_cstr_slice};
 
 
 /// Returns a logical GPU using the physical GPU provided.
 /// 
 /// # Safety
-/// The `p_next` parameters must either be `nullptrs` or 
+/// The `p_next` parameters must either be `nullptrs` or
 /// must be valid!
 pub unsafe fn create_logical_gpu(
-    instance: &Instance,
+    app_ctx: &ApplicationContext,
     selected_gpu: &PhysicalDevice,
 
     queue_create_info_p_nexts: &[*const c_void],
@@ -48,7 +48,7 @@ pub unsafe fn create_logical_gpu(
     );
 
     let logical_gpu = unsafe {
-        instance.create_device(
+        app_ctx.instance.create_device(
             *selected_gpu,
             &logical_gpu_create_info,
             None

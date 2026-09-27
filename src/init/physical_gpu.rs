@@ -3,7 +3,7 @@ use ash::{Instance, prelude::VkResult, vk::{ExtensionProperties, PhysicalDevice,
 #[allow(unused)]
 use crate::logging::android::AndroidLogPriority;
 
-use crate::{LZVK_BASELINE_VULKAN_API_VERSION, logging::log};
+use crate::{LZVK_BASELINE_VULKAN_API_VERSION, init::ApplicationContext, logging::log};
 
 /// Returns `true` if the given device Vulkan API version
 /// is compatible with `lz-vk`
@@ -62,16 +62,17 @@ fn is_compute_queue_supported(
 
 /// Returns a list of Physical GPUs that are `lz-vk` compatible
 pub fn get_supported_physical_gpus(
-    instance: &Instance
+    app_ctx: &ApplicationContext
 ) -> VkResult<Vec<PhysicalDevice>> {
-    let all_physical_devices = unsafe { instance.enumerate_physical_devices() };
+    let all_physical_devices = unsafe { app_ctx.instance.enumerate_physical_devices() };
 
     match all_physical_devices {
         Err(e) => {
             log!(
                 get_supported_physical_gpus,
                 AndroidLogPriority::Error,
-                "{:?}",
+                "[AppName: {}]: {:?}",
+                app_ctx.get_application_name(),
                 e
             );
             Err(e)
@@ -82,7 +83,7 @@ pub fn get_supported_physical_gpus(
                     let mut device_properties2 = PhysicalDeviceProperties2::default();
 
                     unsafe {
-                        instance
+                        app_ctx.instance
                             .get_physical_device_properties2(
                                 *physical_device,
                                 &mut device_properties2
@@ -92,16 +93,31 @@ pub fn get_supported_physical_gpus(
                     if is_vulkan_baseline_compatible(&device_properties2) {
                         if
                             is_gpu(&device_properties2) &&
-                            is_compute_queue_supported(instance, physical_device)
+                            is_compute_queue_supported(&app_ctx.instance, physical_device)
                         {
-                            log!(get_supported_physical_gpus, AndroidLogPriority::Info, "true");
+                            log!(
+                                get_supported_physical_gpus,
+                                AndroidLogPriority::Info,
+                                "[AppName: {}]: true",
+                                app_ctx.get_application_name()
+                            );
                             true
                         } else {
-                            log!(get_supported_physical_gpus, "false");
+                            log!(
+                                get_supported_physical_gpus,
+                                AndroidLogPriority::Info,
+                                "[AppName: {}]: false",
+                                app_ctx.get_application_name()
+                            );
                             false
                         }
                     } else {
-                        log!(get_supported_physical_gpus, "false");
+                        log!(
+                            get_supported_physical_gpus,
+                            AndroidLogPriority::Info,
+                            "[AppName: {}]: false",
+                            app_ctx.get_application_name()
+                        );
                         false
                     }
                 })
@@ -114,16 +130,22 @@ pub fn get_supported_physical_gpus(
 
 /// Returns all GPU extension properties
 pub fn get_gpu_extension_properties(
-    instance: &Instance,
+    app_ctx: &ApplicationContext,
     selected_gpu: &PhysicalDevice
 ) -> VkResult<Vec<ExtensionProperties>> {
     let gpu_extensions = unsafe {
-        instance.enumerate_device_extension_properties(*selected_gpu)
+        app_ctx.instance.enumerate_device_extension_properties(*selected_gpu)
     };
 
     match gpu_extensions {
         Err(e) => {
-            log!(get_gpu_extension_properties, AndroidLogPriority::Error, "{:?}", e);
+            log!(
+                get_gpu_extension_properties,
+                AndroidLogPriority::Error,
+                "[AppName: {}]: {:?}",
+                app_ctx.get_application_name(),
+                e
+            );
             Err(e)
         },
         Ok(gpu_extensions) => Ok(gpu_extensions)
@@ -134,21 +156,34 @@ pub fn get_gpu_extension_properties(
 /// 
 /// Ignores the extensions whose names arent null terminated or
 /// dont contain valid UTF-8
-pub fn get_gpu_extension_names(
-    gpu_extensions: &[ExtensionProperties]
-) -> Vec<&str> {
+pub fn get_gpu_extension_names<'a>(
+    app_ctx: &ApplicationContext,
+    gpu_extensions: &'a [ExtensionProperties]
+) -> Vec<&'a str> {
     gpu_extensions
         .iter()
         .filter_map(|ext| {
             match ext.extension_name_as_c_str() {
                 Err(e) => {
-                    log!(get_gpu_extension_names, AndroidLogPriority::Error, "{:?}", e);
+                    log!(
+                        get_gpu_extension_names,
+                        AndroidLogPriority::Error,
+                        "[AppName: {}]: {:?}",
+                        app_ctx.get_application_name(),
+                        e
+                    );
                     None
                 }
                 Ok(ext_cstr) => {
                     match ext_cstr.to_str() {
                         Err(e) => {
-                            log!(get_gpu_extension_names, AndroidLogPriority::Error, "{:?}", e);
+                            log!(
+                                get_gpu_extension_names,
+                                AndroidLogPriority::Error,
+                                "[AppName: {}]: {:?}",
+                                app_ctx.get_application_name(),
+                                e
+                            );
                             None
                         },
                         Ok(ext_str) => Some(ext_str)

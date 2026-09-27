@@ -14,11 +14,11 @@ fn init_instance() {
     start_debug_region();
 
     let instance_extensions = get_instance_extensions(&entry).unwrap();
-    let _instance =
+    let _app_ctx =
         // Usage of Vulkan Validation Layers isnt allowed on Android (Termux), due to Android security policies.
         init(
-            &entry,
-            &app_info,
+            entry,
+            app_info,
             !is_android_host(),
             is_portability_enumeration_supported(&instance_extensions)
         ).unwrap();
@@ -36,21 +36,21 @@ fn init_physical_gpu() {
     start_debug_region();
 
     let instance_extensions = get_instance_extensions(&entry).unwrap();
-    let instance =
+    let app_ctx =
         // Usage of Vulkan Validation Layers isnt allowed on Android (Termux), due to Android security policies.
         init(
-            &entry,
-            &app_info,
+            entry,
+            app_info,
             !is_android_host(),
             is_portability_enumeration_supported(&instance_extensions)
         ).unwrap();
 
-    let physical_gpus = get_supported_physical_gpus(&instance)
+    let physical_gpus = get_supported_physical_gpus(&app_ctx)
         .unwrap();
 
     let _gpu = unsafe {
         create_logical_gpu(
-            &instance,
+            &app_ctx,
             &physical_gpus[0],
             &[null()],
             &[0],

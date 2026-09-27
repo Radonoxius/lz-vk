@@ -1,11 +1,11 @@
 use std::{ffi::CStr, ptr::null};
 
-use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, ExtensionProperties, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME, LayerProperties}};
+use ash::{Entry, prelude::VkResult, vk::{ApplicationInfo, ExtensionProperties, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME, LayerProperties}};
 
 #[allow(unused)]
 use crate::logging::android::AndroidLogPriority;
 
-use crate::{LAYER_KHRONOS_VALIDATION_NAME, LZVK_BASELINE_VULKAN_API_VERSION, logging::log};
+use crate::{LAYER_KHRONOS_VALIDATION_NAME, LZVK_BASELINE_VULKAN_API_VERSION, init::ApplicationContext, logging::log};
 
 /// Helper to create minimal `ApplicationInfo`
 pub fn create_application_info(name: &'_ CStr) -> ApplicationInfo<'_> {
@@ -13,25 +13,6 @@ pub fn create_application_info(name: &'_ CStr) -> ApplicationInfo<'_> {
         api_version: LZVK_BASELINE_VULKAN_API_VERSION,
         p_application_name: name.as_ptr(),
         ..Default::default()
-    }
-}
-
-/// Returns the name of the Application.
-/// 
-/// **NOTE**: This returns the default string if name isnt valid UTF-8.
-pub fn get_application_name<'a>(
-    app_info: &ApplicationInfo<'a>
-) -> &'a str {
-    if app_info.p_application_name == null() {
-        Default::default()
-    } else {
-        let app_name = unsafe {
-            CStr::from_ptr(app_info.p_application_name)
-        }.to_str();
-        match app_name {
-            Err(_) => Default::default(),
-            Ok(app_name) => app_name
-        }
     }
 }
 
@@ -95,17 +76,32 @@ pub fn is_portability_enumeration_supported(
 }
 
 /// Initializes a Vulkan instance based on the given parameters
+/// 
+/// **NOTE**: If the provided application name isnt valid UTF-8, the default string value
+/// will be used as its name in the logs
 pub fn init(
-    entry: &Entry,
-    app_info: &ApplicationInfo,
+    entry: Entry,
+    app_info: ApplicationInfo,
     enable_debug_validation: bool,
     enbale_portability_enumeration: bool
-) -> VkResult<Instance> {
+) -> VkResult<ApplicationContext> {
     let mut instance_info = InstanceCreateInfo {
-        p_application_info: app_info,
+        p_application_info: &app_info,
         ..Default::default()
     };
-    let applicaion_name = get_application_name(app_info);
+
+    let applicaion_name =
+        if app_info.p_application_name == null() {
+            Default::default()
+        } else {
+            let app_name = unsafe {
+                CStr::from_ptr(app_info.p_application_name)
+            }.to_str();
+            match app_name {
+                Err(_) => Default::default(),
+                Ok(app_name) => app_name
+            }
+        };
 
     let enabled_layers = [LAYER_KHRONOS_VALIDATION_NAME.as_ptr()];
     let enabled_instance_extensions = [KHR_PORTABILITY_ENUMERATION_NAME.as_ptr()];
@@ -124,22 +120,26 @@ pub fn init(
     };
 
     match instance {
-        Err(e) => log!(
-            init,
-            AndroidLogPriority::Error,
-            "[AppName: {}]: {:?}",
-            applicaion_name,
-            e
-        ),
-        _ => log!(
-            init,
-            AndroidLogPriority::Info,
-            "[AppName: {}]: enable_debug_validation: {}, enbale_portability_enumeration: {}",
-            applicaion_name,
-            enable_debug_validation,
-            enbale_portability_enumeration
-        )
+        Err(e) => {
+            log!(
+                init,
+                AndroidLogPriority::Error,
+                "[AppName: {}]: {:?}",
+                applicaion_name,
+                e
+            );
+            Err(e)
+        },
+        Ok(instance) => {
+            log!(
+                init,
+                AndroidLogPriority::Info,
+                "[AppName: {}]: enable_debug_validation: {}, enbale_portability_enumeration: {}",
+                applicaion_name,
+                enable_debug_validation,
+                enbale_portability_enumeration
+            );
+            Ok(ApplicationContext::new(entry, app_info, instance))
+        }
     }
-
-    instance
 }
