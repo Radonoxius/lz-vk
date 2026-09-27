@@ -1,4 +1,4 @@
-use std::ffi::CStr;
+use std::{ffi::CStr, ptr::null};
 
 use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, ExtensionProperties, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME, LayerProperties}};
 
@@ -18,16 +18,20 @@ pub fn create_application_info(name: &'_ CStr) -> ApplicationInfo<'_> {
 
 /// Returns the name of the Application.
 /// 
-/// # Safety
-/// `app_info.p_application_name` must not be a nullptr!
-/// The app name should be null terminated & contain valid UTF-8!
-pub unsafe fn get_application_name<'a>(
+/// **NOTE**: This returns the default string if name isnt valid UTF-8.
+pub fn get_application_name<'a>(
     app_info: &ApplicationInfo<'a>
 ) -> &'a str {
-    unsafe {
-        CStr::from_ptr(app_info.p_application_name)
-            .to_str()
-            .unwrap_unchecked()
+    if app_info.p_application_name == null() {
+        Default::default()
+    } else {
+        let app_name = unsafe {
+            CStr::from_ptr(app_info.p_application_name)
+        }.to_str();
+        match app_name {
+            Err(_) => Default::default(),
+            Ok(app_name) => app_name
+        }
     }
 }
 
@@ -91,13 +95,7 @@ pub fn is_portability_enumeration_supported(
 }
 
 /// Initializes a Vulkan instance based on the given parameters
-/// 
-/// # Safety
-/// `entry` must be valid!
-///
-/// `app_info.p_application_name` must not be a nullptr!
-/// The app name should be null terminated & contain valid UTF-8!
-pub unsafe fn init(
+pub fn init(
     entry: &Entry,
     app_info: &ApplicationInfo,
     enable_debug_validation: bool,
@@ -107,7 +105,7 @@ pub unsafe fn init(
         p_application_info: app_info,
         ..Default::default()
     };
-    let applicaion_name = unsafe { get_application_name(app_info) };
+    let applicaion_name = get_application_name(app_info);
 
     let enabled_layers = [LAYER_KHRONOS_VALIDATION_NAME.as_ptr()];
     let enabled_instance_extensions = [KHR_PORTABILITY_ENUMERATION_NAME.as_ptr()];
