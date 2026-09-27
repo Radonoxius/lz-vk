@@ -1,4 +1,4 @@
-use std::{ffi::CStr, sync::atomic::AtomicBool};
+use std::ffi::CStr;
 
 use ash::vk::{API_VERSION_1_1, api_version_major, api_version_minor};
 
@@ -18,8 +18,3 @@ pub(crate) const LZVK_BASELINE_MAJOR: u32 = api_version_major(LZVK_BASELINE_VULK
 pub(crate) const LZVK_BASELINE_MINOR: u32 = api_version_minor(LZVK_BASELINE_VULKAN_API_VERSION);
 
 pub(crate) const LAYER_KHRONOS_VALIDATION_NAME: &CStr = c"VK_LAYER_KHRONOS_validation";
-
-/// Specifies whether debug logs are enabled.
-///
-/// Disabled by default
-pub(crate) static DEBUG_LOGS: AtomicBool = AtomicBool::new(false);

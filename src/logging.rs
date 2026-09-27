@@ -1,6 +1,9 @@
-use std::sync::atomic::Ordering::SeqCst;
+use std::sync::atomic::{AtomicBool, Ordering::SeqCst};
 
-use crate::DEBUG_LOGS;
+/// Specifies whether debug logs are enabled.
+///
+/// Disabled by default
+pub(crate) static DEBUG_LOGS: AtomicBool = AtomicBool::new(false);
 
 /// Enables Debug Logs within a region ended with `stop_debug_region`.
 /// Useful to debug a region of code (or everything). Safe for multi-threaded use
@@ -118,7 +121,7 @@ pub mod android {
 /// ```
 macro_rules! log {
     ($function_name:ident, $fmt:literal $(, $($arg:tt)*)?) => {
-        if crate::DEBUG_LOGS.load(std::sync::atomic::Ordering::Relaxed) {
+        if crate::logging::DEBUG_LOGS.load(std::sync::atomic::Ordering::Relaxed) {
             #[cfg(target_os = "android")]
             unsafe {
                 crate::logging::android::android_log(
@@ -133,7 +136,7 @@ macro_rules! log {
     };
     
     ($function_name:ident, $android_prio:path, $fmt:literal $(, $($arg:tt)*)?) => {
-        if crate::DEBUG_LOGS.load(std::sync::atomic::Ordering::Relaxed) {
+        if crate::logging::DEBUG_LOGS.load(std::sync::atomic::Ordering::Relaxed) {
             #[cfg(target_os = "android")]
             unsafe {
                 crate::logging::android::android_log(

@@ -1,4 +1,4 @@
-use std::{ffi::CStr, str::Utf8Error};
+use std::ffi::CStr;
 
 use ash::{Entry, Instance, prelude::VkResult, vk::{ApplicationInfo, ExtensionProperties, InstanceCreateFlags, InstanceCreateInfo, KHR_PORTABILITY_ENUMERATION_NAME, LayerProperties}};
 
@@ -20,24 +20,19 @@ pub fn create_application_info(name: &'_ CStr) -> ApplicationInfo<'_> {
 /// 
 /// # Safety
 /// `app_info.p_application_name` must not be a nullptr!
-/// The app name should be null terminated!
+/// The app name should be null terminated & contain valid UTF-8!
 pub unsafe fn get_application_name<'a>(
     app_info: &ApplicationInfo<'a>
-) -> Result<&'a str, Utf8Error> {
-    let application_name = unsafe { CStr::from_ptr(app_info.p_application_name) }
-        .to_str();
-
-    match application_name {
-        Err(e) => {
-            log!(get_application_name, AndroidLogPriority::Error, "{:?}", e);
-            Err(e)
-        },
-        Ok(application_name) => Ok(application_name)
+) -> &'a str {
+    unsafe {
+        CStr::from_ptr(app_info.p_application_name)
+            .to_str()
+            .unwrap_unchecked()
     }
 }
 
-/// Enumerates all available Instance Extensions.
-pub fn get_instance_extension_properties(
+/// Enumerates all available Instance Extensions
+pub fn get_instance_extensions(
     entry: &Entry
 ) -> VkResult<Vec<ExtensionProperties>> {
     // Safe to do since it is infallible
@@ -54,7 +49,8 @@ pub fn get_instance_extension_properties(
     }
 }
 
-pub fn get_instance_layer_properties(
+/// Enumerates all available Instance Layers
+pub fn get_instance_layers(
     entry: &Entry
 ) -> VkResult<Vec<LayerProperties>> {
     // Safe to do since it is infallible
@@ -99,7 +95,7 @@ pub fn is_portability_enumeration_supported(
 /// 
 /// # Safety
 /// `app_info.p_application_name` must not be a nullptr!
-/// The app name should be null terminated & be valid UTF-8!
+/// The app name should be null terminated & contain valid UTF-8!
 pub unsafe fn init(
     entry: &Entry,
     app_info: &ApplicationInfo,
@@ -107,7 +103,7 @@ pub unsafe fn init(
     enbale_portability_enumeration: bool
 ) -> VkResult<Instance> {
     let mut instance_info = InstanceCreateInfo::default();
-    let applicaion_name = unsafe { get_application_name(app_info).unwrap_or_default() };
+    let applicaion_name = unsafe { get_application_name(app_info) };
 
     let enabled_layers = [LAYER_KHRONOS_VALIDATION_NAME.as_ptr()];
     let enabled_instance_extensions = [KHR_PORTABILITY_ENUMERATION_NAME.as_ptr()];

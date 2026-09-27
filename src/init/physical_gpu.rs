@@ -1,6 +1,4 @@
-use std::ffi::CStr;
-
-use ash::{Instance, prelude::VkResult, vk::{PhysicalDevice, PhysicalDeviceProperties2, PhysicalDeviceType, QueueFamilyProperties2, QueueFlags, api_version_major, api_version_minor}};
+use ash::{Instance, prelude::VkResult, vk::{ExtensionProperties, PhysicalDevice, PhysicalDeviceProperties2, PhysicalDeviceType, QueueFamilyProperties2, QueueFlags, api_version_major, api_version_minor}};
 
 #[allow(unused)]
 use crate::logging::android::AndroidLogPriority;
@@ -115,33 +113,48 @@ pub fn get_supported_physical_gpus(
     }
 }
 
-/// Returns the names of all extensions supported by the GPU
-pub fn get_gpu_extension_names(
+pub fn get_gpu_extension_properties(
     instance: &Instance,
     selected_gpu: &PhysicalDevice
-) -> VkResult<Vec<String>> {
+) -> VkResult<Vec<ExtensionProperties>> {
     let gpu_extensions = unsafe {
         instance.enumerate_device_extension_properties(*selected_gpu)
     };
 
     match gpu_extensions {
         Err(e) => {
-            log!(get_gpu_extension_names, AndroidLogPriority::Error, "{:?}", e);
+            log!(get_gpu_extension_properties, AndroidLogPriority::Error, "{:?}", e);
             Err(e)
         },
-        Ok(gpu_extensions) => {
-            let mut extension_names = Vec::new();
-
-            for extension in gpu_extensions {
-                extension_names.push(
-                    // Safe to do since it is infallible
-                    unsafe {
-                        CStr::from_ptr(&raw const extension.extension_name[0]).to_str().unwrap_unchecked().to_string()
-                    }
-                );
-            }
-
-            Ok(extension_names)
-        }
+        Ok(gpu_extensions) => Ok(gpu_extensions)
     }
+}
+
+/// Returns the names of extensions supported by the GPU.
+/// 
+/// Ignores the extensions whose names arent null terminated or
+/// dont contain valid UTF-8
+pub fn get_gpu_extension_names(
+    gpu_extensions: &[ExtensionProperties]
+) -> Vec<&str> {
+    gpu_extensions
+        .iter()
+        .filter_map(|ext| {
+            match ext.extension_name_as_c_str() {
+                Err(e) => {
+                    log!(get_gpu_extension_names, AndroidLogPriority::Error, "{:?}", e);
+                    None
+                }
+                Ok(ext_cstr) => {
+                    match ext_cstr.to_str() {
+                        Err(e) => {
+                            log!(get_gpu_extension_names, AndroidLogPriority::Error, "{:?}", e);
+                            None
+                        },
+                        Ok(ext_str) => Some(ext_str)
+                    }
+                }
+            }
+        })
+        .collect()
 }
