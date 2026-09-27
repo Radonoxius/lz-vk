@@ -102,7 +102,10 @@ pub unsafe fn init(
     enable_debug_validation: bool,
     enbale_portability_enumeration: bool
 ) -> VkResult<Instance> {
-    let mut instance_info = InstanceCreateInfo::default();
+    let mut instance_info = InstanceCreateInfo {
+        p_application_info: app_info,
+        ..Default::default()
+    };
     let applicaion_name = unsafe { get_application_name(app_info) };
 
     let enabled_layers = [LAYER_KHRONOS_VALIDATION_NAME.as_ptr()];
