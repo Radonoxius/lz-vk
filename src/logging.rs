@@ -22,7 +22,7 @@ pub mod android {
     #[cfg(target_os = "android")]
     use std::{ffi::c_char, sync::atomic::Ordering::Relaxed};
     #[cfg(target_os = "android")]
-    use crate::DEBUG_LOGS;
+    use crate::logging::DEBUG_LOGS;
 
     /// Represents the log tag of this library in Android logs
     pub const LOG_TAG: &CStr = c"lz-vk";
