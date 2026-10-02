@@ -135,7 +135,7 @@ pub fn get_supported_physical_gpus(
 /// 
 /// **NOTE**: If the provided application name isnt valid UTF-8, the default string value
 /// will be used as its name in the logs
-pub fn get_gpu_extension_properties(
+pub fn get_gpu_extensions(
     app_ctx: &ApplicationContext,
     selected_gpu: &PhysicalDevice
 ) -> VkResult<Vec<ExtensionProperties>> {

@@ -5,8 +5,7 @@ use ash::{Device, prelude::VkResult, vk::{DeviceCreateInfo, DeviceQueueCreateInf
 #[allow(unused)]
 use crate::logging::android::AndroidLogPriority;
 
-use crate::{init::ApplicationContext, logging::log, utils::get_raw_cstr_slice};
-
+use crate::{init::ApplicationContext, logging::log, utils::get_raw_cstr_ptrs};
 
 /// Returns a logical GPU using the physical GPU provided.
 /// 
@@ -41,13 +40,14 @@ pub unsafe fn create_logical_gpu(
         );
     }
 
+    let enabled_extension_names = get_raw_cstr_ptrs(device_create_info_enabled_extension_names);
     let logical_gpu_create_info = DeviceCreateInfo {
         p_next: device_create_info_p_next,
         ..Default::default()
     }.queue_create_infos(
         &queue_create_infos
     ).enabled_extension_names(
-        unsafe { get_raw_cstr_slice(device_create_info_enabled_extension_names) }
+        &enabled_extension_names
     );
 
     let logical_gpu = unsafe {

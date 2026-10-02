@@ -66,7 +66,7 @@ pub fn get_instance_layers(
 
 /// Returns the names of layers supported by the instance.
 /// 
-/// Ignores the extensions whose names arent null terminated or
+/// Ignores the layers whose names arent null terminated or
 /// dont contain valid UTF-8
 pub fn get_instance_layer_names(
     instance_layer_properties: &[LayerProperties]
@@ -167,5 +167,36 @@ pub fn init(
             );
             Ok(ApplicationContext::new(entry, app_info, instance))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use test_utils::test_init;
+    use crate::{init::{instance::{get_instance_extensions, get_instance_layers}}, logging::{start_debug_region, stop_debug_region}};
+
+    #[test]
+    fn test_get_instance_extensions() {
+        start_debug_region();
+        let app_ctx = test_init("test_get_instance_extensions");
+
+        let instance_extensions = get_instance_extensions(app_ctx.entry());
+        assert!(instance_extensions.is_ok());
+
+        let instance_extensions = instance_extensions.unwrap();
+        assert!(instance_extensions.len() >= 1);
+        stop_debug_region();
+    }
+
+    #[test]
+    fn test_get_instance_layers() {
+        start_debug_region();
+        let app_ctx = test_init("test_get_instance_layers");
+
+        let instance_layers = get_instance_layers(&app_ctx.entry());
+        assert!(instance_layers.is_ok());
+
+        let _instance_layers = instance_layers.unwrap();
+        stop_debug_region();
     }
 }
